@@ -5,10 +5,12 @@ import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 
 void main() {
+  
   runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends ConsumerWidget {
+  //debugShowCheckedModeBanner: false;
   const MyApp({super.key});
 
   @override

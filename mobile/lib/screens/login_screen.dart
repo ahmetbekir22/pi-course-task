@@ -42,6 +42,45 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'E-posta gerekli';
+    }
+    
+    // Email format validation
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Geçerli bir e-posta adresi girin';
+    }
+    
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Şifre gerekli';
+    }
+    
+    if (value.length < 8) {
+      return 'Şifre en az 8 karakter olmalı';
+    }
+    
+    // Password strength validation
+    if (!value.contains(RegExp(r'[A-Z]'))) {
+      return 'Şifre en az bir büyük harf içermeli';
+    }
+    
+    if (!value.contains(RegExp(r'[a-z]'))) {
+      return 'Şifre en az bir küçük harf içermeli';
+    }
+    
+    if (!value.contains(RegExp(r'[0-9]'))) {
+      return 'Şifre en az bir rakam içermeli';
+    }
+    
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -73,16 +112,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   labelText: 'E-posta',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.email),
+                  hintText: 'ornek@email.com',
                 ),
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'E-posta gerekli';
+                validator: _validateEmail,
+                onChanged: (value) {
+                  // Clear error when user starts typing
+                  if (authState.error != null) {
+                    ref.read(authProvider.notifier).clearError();
                   }
-                  if (!value.contains('@')) {
-                    return 'Geçerli bir e-posta girin';
-                  }
-                  return null;
                 },
               ),
               const SizedBox(height: 16),
@@ -93,16 +131,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   labelText: 'Şifre',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock),
+                  hintText: 'En az 8 karakter',
                 ),
                 obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Şifre gerekli';
+                validator: _validatePassword,
+                onChanged: (value) {
+                  // Clear error when user starts typing
+                  if (authState.error != null) {
+                    ref.read(authProvider.notifier).clearError();
                   }
-                  if (value.length < 8) {
-                    return 'Şifre en az 8 karakter olmalı';
-                  }
-                  return null;
                 },
               ),
               const SizedBox(height: 16),
@@ -123,6 +160,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     setState(() {
                       _selectedRole = value!;
                     });
+                    // Clear error when user changes role
+                    if (authState.error != null) {
+                      ref.read(authProvider.notifier).clearError();
+                    }
                   },
                 ),
                 const SizedBox(height: 16),
@@ -136,9 +177,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: Colors.red.shade300),
                   ),
-                  child: Text(
-                    authState.error!,
-                    style: TextStyle(color: Colors.red.shade700),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error, color: Colors.red.shade700, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          authState.error!,
+                          style: TextStyle(color: Colors.red.shade700),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -150,7 +199,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: authState.isLoading
-                    ? const CircularProgressIndicator()
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : Text(_isLogin ? 'Giriş Yap' : 'Kayıt Ol'),
               ),
               const SizedBox(height: 16),

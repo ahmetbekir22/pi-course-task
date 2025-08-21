@@ -20,34 +20,59 @@ class ApiClient {
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         final token = await _storage.read(key: 'access_token');
-        if (token != null) {
+        if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         }
         handler.next(options);
       },
       onError: (error, handler) async {
+        // Only handle 401
         if (error.response?.statusCode == 401) {
-          // Token expired, try to refresh
+          final path = error.requestOptions.path;
+
+          // Do not attempt refresh on auth endpoints or if already retried
+          final isAuthEndpoint = path.contains('/auth/login') ||
+              path.contains('/auth/register') ||
+              path.contains('/auth/refresh');
+          final alreadyRetried = error.requestOptions.extra['retried'] == true;
+
+          if (isAuthEndpoint || alreadyRetried) {
+            handler.next(error);
+            return;
+          }
+
           final refreshToken = await _storage.read(key: 'refresh_token');
-          if (refreshToken != null) {
-            try {
-              final response = await _dio.post('/auth/refresh', data: {
-                'refresh': refreshToken,
-              });
-              final newToken = response.data['access'];
-              await _storage.write(key: 'access_token', value: newToken);
-              
-              // Retry original request
-              error.requestOptions.headers['Authorization'] = 'Bearer $newToken';
-              final retryResponse = await _dio.fetch(error.requestOptions);
-              handler.resolve(retryResponse);
-              return;
-            } catch (e) {
-              // Refresh failed, clear tokens
-              await _storage.deleteAll();
-            }
+          if (refreshToken == null || refreshToken.isEmpty) {
+            handler.next(error);
+            return;
+          }
+
+          try {
+            // Use a clean Dio instance without interceptors to avoid recursion
+            final refreshDio = Dio(BaseOptions(baseUrl: baseUrl));
+            final response = await refreshDio.post('/auth/refresh', data: {
+              'refresh': refreshToken,
+            });
+            final newToken = response.data['access'] as String;
+            await _storage.write(key: 'access_token', value: newToken);
+
+            // Retry original request with new token
+            final requestOptions = error.requestOptions;
+            requestOptions.headers['Authorization'] = 'Bearer $newToken';
+            requestOptions.extra['retried'] = true;
+
+            final retryResponse = await _dio.fetch(requestOptions);
+            handler.resolve(retryResponse);
+            return;
+          } catch (e) {
+            // Refresh failed -> clear tokens and propagate original error
+            await _storage.deleteAll();
+            handler.next(error);
+            return;
           }
         }
+
+        // Not a 401, continue
         handler.next(error);
       },
     ));

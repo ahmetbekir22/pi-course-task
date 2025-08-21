@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import '../models/auth.dart';
 import '../models/user.dart';
 import '../services/api_client.dart';
@@ -44,12 +45,53 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final request = LoginRequest(email: email, password: password);
       await _apiClient.login(request);
-      await _loadUser();
+      await _loadUser(); // Load user after successful login
+    } on DioException catch (e) {
+      String errorMessage = 'Giriş yapılamadı';
+      
+      if (e.response?.statusCode == 400) {
+        // Backend validation error
+        final data = e.response?.data;
+        if (data is Map<String, dynamic>) {
+          if (data.containsKey('email')) {
+            errorMessage = 'E-posta adresi geçersiz';
+          } else if (data.containsKey('password')) {
+            errorMessage = 'Şifre geçersiz';
+          } else if (data.containsKey('non_field_errors')) {
+            errorMessage = 'E-posta veya şifre hatalı';
+          } else {
+            errorMessage = 'Giriş bilgileri hatalı';
+          }
+        }
+      } else if (e.response?.statusCode == 401) {
+        // Check for specific error message from backend
+        final data = e.response?.data;
+        if (data is Map<String, dynamic> && data.containsKey('detail')) {
+          final detail = data['detail'] as String;
+          if (detail.contains('No active account found')) {
+            errorMessage = 'E-posta veya şifre hatalı';
+          } else {
+            errorMessage = detail;
+          }
+        } else {
+          errorMessage = 'E-posta veya şifre hatalı';
+        }
+      } else if (e.type == DioExceptionType.connectionTimeout) {
+        errorMessage = 'Bağlantı zaman aşımı';
+      } else if (e.type == DioExceptionType.connectionError) {
+        errorMessage = 'Sunucuya bağlanılamıyor';
+      }
+      
+      state = state.copyWith(
+        error: errorMessage,
+      );
     } catch (e) {
       state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
+        error: 'Beklenmeyen bir hata oluştu',
       );
+    } finally {
+      // Always stop loading spinner
+      state = state.copyWith(isLoading: false);
     }
   }
 
@@ -65,29 +107,80 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _apiClient.register(request);
       // After registration, login automatically
       await login(email, password);
+    } on DioException catch (e) {
+      String errorMessage = 'Kayıt olunamadı';
+      
+      if (e.response?.statusCode == 400) {
+        // Backend validation error
+        final data = e.response?.data;
+        if (data is Map<String, dynamic>) {
+          if (data.containsKey('email')) {
+            final emailErrors = data['email'] as List?;
+            if (emailErrors != null && emailErrors.isNotEmpty) {
+              errorMessage = emailErrors.first.toString();
+            } else {
+              errorMessage = 'E-posta adresi geçersiz';
+            }
+          } else if (data.containsKey('password')) {
+            final passwordErrors = data['password'] as List?;
+            if (passwordErrors != null && passwordErrors.isNotEmpty) {
+              errorMessage = passwordErrors.first.toString();
+            } else {
+              errorMessage = 'Şifre geçersiz';
+            }
+          } else if (data.containsKey('role')) {
+            errorMessage = 'Geçersiz rol seçimi';
+          } else {
+            errorMessage = 'Kayıt bilgileri hatalı';
+          }
+        }
+      } else if (e.response?.statusCode == 409) {
+        errorMessage = 'Bu e-posta adresi zaten kayıtlı';
+      } else if (e.type == DioExceptionType.connectionTimeout) {
+        errorMessage = 'Bağlantı zaman aşımı';
+      } else if (e.type == DioExceptionType.connectionError) {
+        errorMessage = 'Sunucuya bağlanılamıyor';
+      }
+      
+      state = state.copyWith(
+        error: errorMessage,
+      );
     } catch (e) {
       state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
+        error: 'Beklenmeyen bir hata oluştu',
       );
+    } finally {
+      // If auto-login fails, ensure loading stops
+      state = state.copyWith(isLoading: false);
     }
   }
 
   Future<void> _loadUser() async {
     try {
       final user = await _apiClient.getMe();
-      state = state.copyWith(user: user, isLoading: false);
+      state = state.copyWith(user: user);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        // Token expired or invalid, clear tokens
+        await _apiClient.logout();
+        state = state.copyWith(
+          error: 'Oturum süresi doldu, lütfen tekrar giriş yapın',
+        );
+      } else {
+        state = state.copyWith(
+          error: 'Kullanıcı bilgileri yüklenemedi',
+        );
+      }
     } catch (e) {
       state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
+        error: 'Beklenmeyen bir hata oluştu',
       );
     }
   }
 
   Future<void> logout() async {
     await _apiClient.logout();
-    state = AuthState();
+    state = AuthState(); // Clear user state on logout
   }
 
   Future<void> updateProfile({
@@ -104,12 +197,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
         hourlyRate: hourlyRate,
       );
       final updatedUser = await _apiClient.updateProfile(request);
-      state = state.copyWith(user: updatedUser, isLoading: false);
+      state = state.copyWith(user: updatedUser);
+    } on DioException catch (e) {
+      String errorMessage = 'Profil güncellenemedi';
+      
+      if (e.response?.statusCode == 400) {
+        final data = e.response?.data;
+        if (data is Map<String, dynamic>) {
+          if (data.containsKey('grade_level')) {
+            errorMessage = 'Sınıf seviyesi geçersiz';
+          } else if (data.containsKey('bio')) {
+            errorMessage = 'Biyografi geçersiz';
+          } else if (data.containsKey('hourly_rate')) {
+            errorMessage = 'Saatlik ücret geçersiz';
+          }
+        }
+      }
+      
+      state = state.copyWith(
+        error: errorMessage,
+      );
     } catch (e) {
       state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
+        error: 'Beklenmeyen bir hata oluştu',
       );
+    } finally {
+      state = state.copyWith(isLoading: false);
     }
   }
 
