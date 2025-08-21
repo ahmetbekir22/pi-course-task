@@ -26,11 +26,8 @@ class ApiClient {
         handler.next(options);
       },
       onError: (error, handler) async {
-        // Only handle 401
         if (error.response?.statusCode == 401) {
           final path = error.requestOptions.path;
-
-          // Do not attempt refresh on auth endpoints or if already retried
           final isAuthEndpoint = path.contains('/auth/login') ||
               path.contains('/auth/register') ||
               path.contains('/auth/refresh');
@@ -48,7 +45,6 @@ class ApiClient {
           }
 
           try {
-            // Use a clean Dio instance without interceptors to avoid recursion
             final refreshDio = Dio(BaseOptions(baseUrl: baseUrl));
             final response = await refreshDio.post('/auth/refresh', data: {
               'refresh': refreshToken,
@@ -56,7 +52,6 @@ class ApiClient {
             final newToken = response.data['access'] as String;
             await _storage.write(key: 'access_token', value: newToken);
 
-            // Retry original request with new token
             final requestOptions = error.requestOptions;
             requestOptions.headers['Authorization'] = 'Bearer $newToken';
             requestOptions.extra['retried'] = true;
@@ -65,14 +60,12 @@ class ApiClient {
             handler.resolve(retryResponse);
             return;
           } catch (e) {
-            // Refresh failed -> clear tokens and propagate original error
             await _storage.deleteAll();
             handler.next(error);
             return;
           }
         }
 
-        // Not a 401, continue
         handler.next(error);
       },
     ));
@@ -82,17 +75,13 @@ class ApiClient {
   Future<LoginResponse> login(LoginRequest request) async {
     final response = await _dio.post('/auth/login', data: request.toJson());
     final loginResponse = LoginResponse.fromJson(response.data);
-    
-    // Store tokens
     await _storage.write(key: 'access_token', value: loginResponse.access);
     await _storage.write(key: 'refresh_token', value: loginResponse.refresh);
-    
     return loginResponse;
   }
 
-  Future<User> register(RegisterRequest request) async {
-    final response = await _dio.post('/auth/register', data: request.toJson());
-    return User.fromJson(response.data);
+  Future<void> register(RegisterRequest request) async {
+    await _dio.post('/auth/register', data: request.toJson());
   }
 
   Future<void> logout() async {

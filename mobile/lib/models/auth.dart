@@ -35,11 +35,15 @@ class RegisterRequest {
   final String email;
   final String password;
   final String role;
+  final String? firstName;
+  final String? lastName;
 
   RegisterRequest({
     required this.email,
     required this.password,
     required this.role,
+    this.firstName,
+    this.lastName,
   });
 
   factory RegisterRequest.fromJson(Map<String, dynamic> json) => _$RegisterRequestFromJson(json);
@@ -48,8 +52,10 @@ class RegisterRequest {
 
 @JsonSerializable()
 class UpdateProfileRequest {
+  @JsonKey(name: 'grade_level')
   final String? gradeLevel;
   final String? bio;
+  @JsonKey(name: 'hourly_rate')
   final int? hourlyRate;
 
   UpdateProfileRequest({

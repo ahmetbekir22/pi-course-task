@@ -34,6 +34,8 @@ RegisterRequest _$RegisterRequestFromJson(Map<String, dynamic> json) =>
       email: json['email'] as String,
       password: json['password'] as String,
       role: json['role'] as String,
+      firstName: json['firstName'] as String?,
+      lastName: json['lastName'] as String?,
     );
 
 Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
@@ -41,20 +43,22 @@ Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
       'email': instance.email,
       'password': instance.password,
       'role': instance.role,
+      'firstName': instance.firstName,
+      'lastName': instance.lastName,
     };
 
 UpdateProfileRequest _$UpdateProfileRequestFromJson(
         Map<String, dynamic> json) =>
     UpdateProfileRequest(
-      gradeLevel: json['gradeLevel'] as String?,
+      gradeLevel: json['grade_level'] as String?,
       bio: json['bio'] as String?,
-      hourlyRate: (json['hourlyRate'] as num?)?.toInt(),
+      hourlyRate: (json['hourly_rate'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$UpdateProfileRequestToJson(
         UpdateProfileRequest instance) =>
     <String, dynamic>{
-      'gradeLevel': instance.gradeLevel,
+      'grade_level': instance.gradeLevel,
       'bio': instance.bio,
-      'hourlyRate': instance.hourlyRate,
+      'hourly_rate': instance.hourlyRate,
     };

@@ -13,6 +13,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   bool _isLogin = true;
   String _selectedRole = 'student';
 
@@ -20,6 +22,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     super.dispose();
   }
 
@@ -37,6 +41,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _emailController.text.trim(),
           _passwordController.text,
           _selectedRole,
+          firstName: _firstNameController.text.trim().isEmpty ? null : _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim().isEmpty ? null : _lastNameController.text.trim(),
         );
       }
     }
@@ -105,6 +111,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
+              
+              if (!_isLogin) ...[
+                // First Name
+                TextFormField(
+                  controller: _firstNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Ad (Opsiyonel)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person),
+                    hintText: 'Adınız',
+                  ),
+                  onChanged: (value) {
+                    if (authState.error != null) {
+                      ref.read(authProvider.notifier).clearError();
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                
+                // Last Name
+                TextFormField(
+                  controller: _lastNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Soyad (Opsiyonel)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person),
+                    hintText: 'Soyadınız',
+                  ),
+                  onChanged: (value) {
+                    if (authState.error != null) {
+                      ref.read(authProvider.notifier).clearError();
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
               
               TextFormField(
                 controller: _emailController,

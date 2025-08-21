@@ -95,23 +95,34 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> register(String email, String password, String role) async {
+  Future<void> register(String email, String password, String role, {String? firstName, String? lastName}) async {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
+      // 1) Try register
       final request = RegisterRequest(
         email: email,
         password: password,
         role: role,
+        firstName: firstName,
+        lastName: lastName,
       );
       await _apiClient.register(request);
-      // After registration, login automatically
-      await login(email, password);
-    } on DioException catch (e) {
-      String errorMessage = 'Kayıt olunamadı';
       
+      // 2) If register succeeded, try auto-login
+      try {
+        await login(email, password);
+      } catch (loginError) {
+        // If auto-login fails, show success message but don't auto-login
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Kayıt başarılı! Lütfen giriş yapın.',
+        );
+      }
+    } on DioException catch (e) {
+      // Map register-time errors
+      String errorMessage = 'Kayıt olunamadı';
       if (e.response?.statusCode == 400) {
-        // Backend validation error
         final data = e.response?.data;
         if (data is Map<String, dynamic>) {
           if (data.containsKey('email')) {
@@ -130,6 +141,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
             }
           } else if (data.containsKey('role')) {
             errorMessage = 'Geçersiz rol seçimi';
+          } else if (data.containsKey('detail')) {
+            errorMessage = data['detail'].toString();
           } else {
             errorMessage = 'Kayıt bilgileri hatalı';
           }
@@ -143,15 +156,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
       
       state = state.copyWith(
+        isLoading: false,
         error: errorMessage,
       );
     } catch (e) {
       state = state.copyWith(
-        error: 'Beklenmeyen bir hata oluştu',
+        isLoading: false,
+        error: 'Kayıt sırasında beklenmeyen bir hata oluştu',
       );
-    } finally {
-      // If auto-login fails, ensure loading stops
-      state = state.copyWith(isLoading: false);
     }
   }
 
