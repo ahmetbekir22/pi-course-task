@@ -54,8 +54,6 @@ class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=8)
     role = serializers.ChoiceField(choices=[("student", "student"), ("tutor", "tutor")])
-    first_name = serializers.CharField(required=False, allow_blank=True)
-    last_name = serializers.CharField(required=False, allow_blank=True)
 
     def validate_email(self, value: str) -> str:
         if User.objects.filter(email__iexact=value).exists():
@@ -68,17 +66,11 @@ class RegisterSerializer(serializers.Serializer):
         user = User(**validated_data, role=role)
         user.set_password(password)
         user.save()
-        if role == "student":
-            StudentProfile.objects.create(user=user)
-        else:
-            TutorProfile.objects.create(user=user)
+        # Profiles are created by post_save signal; no explicit create here
         return user
 
 
 class MeUpdateSerializer(serializers.Serializer):
-    # Allow updating profile-specific fields
-    first_name = serializers.CharField(required=False, allow_blank=True)
-    last_name = serializers.CharField(required=False, allow_blank=True)
     # Student
     grade_level = serializers.CharField(required=False, allow_blank=True)
     # Tutor
@@ -92,12 +84,6 @@ class MeUpdateSerializer(serializers.Serializer):
 
     def save(self, **kwargs: Any) -> User:
         user: User = self.context["request"].user
-        # Update base fields
-        for field in ["first_name", "last_name"]:
-            if field in self.validated_data:
-                setattr(user, field, self.validated_data[field])
-        user.save()
-
         if user.role == "student":
             profile = user.student_profile
             if "grade_level" in self.validated_data:

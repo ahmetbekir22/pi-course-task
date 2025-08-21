@@ -1,8 +1,9 @@
 from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.generics import GenericAPIView
 from rest_framework_simplejwt.views import TokenObtainPairView
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiTypes
 
 from .serializers import (
     MeUpdateSerializer,
@@ -15,15 +16,22 @@ from .models import TutorProfile
 User = get_user_model()
 
 
+@extend_schema(
+    summary="Kayıt ol",
+    description="Yeni kullanıcı kaydı. Gövde: email, password, role (student|tutor), opsiyonel first_name, last_name.",
+)
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
 
-class MeView(APIView):
+class MeView(GenericAPIView):
+    serializer_class = UserSerializer
+    @extend_schema(summary="Profilimi getir", responses=UserSerializer)
     def get(self, request):
         return Response(UserSerializer(request.user).data)
 
+    @extend_schema(summary="Profilimi güncelle", request=MeUpdateSerializer, responses=UserSerializer)
     def patch(self, request):
         serializer = MeUpdateSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
@@ -31,6 +39,15 @@ class MeView(APIView):
         return Response(UserSerializer(user).data)
 
 
+@extend_schema(
+    summary="Eğitmen listesi",
+    description="Filtre/arama/sıralama ile eğitmenleri listeleyin.",
+    parameters=[
+        OpenApiParameter(name="subject", type=OpenApiTypes.INT, description="Subject id ile filtre"),
+        OpenApiParameter(name="search", type=OpenApiTypes.STR, description="Ad veya bio içinde arama"),
+        OpenApiParameter(name="ordering", type=OpenApiTypes.STR, description="Sıralama: rating veya -rating, hourly_rate veya -hourly_rate"),
+    ],
+)
 class TutorListView(generics.ListAPIView):
     serializer_class = TutorListSerializer
     permission_classes = [permissions.AllowAny]
@@ -48,12 +65,13 @@ class TutorListView(generics.ListAPIView):
         return qs
 
 
+@extend_schema(summary="Eğitmen detayı")
 class TutorDetailView(generics.RetrieveAPIView):
     serializer_class = TutorListSerializer
     permission_classes = [permissions.AllowAny]
 
     def get_object(self):
-        user_id = self.kwargs.get("user_id")
+        user_id = self.kwargs.get("id")
         return (
             TutorProfile.objects.select_related("user")
             .prefetch_related("subjects")

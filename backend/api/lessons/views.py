@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 
 from .models import LessonRequest
 from .serializers import LessonRequestSerializer, LessonRequestUpdateSerializer
@@ -18,6 +19,14 @@ class IsTutor(permissions.BasePermission):
         return request.user.is_authenticated and request.user.role == "tutor"
 
 
+@extend_schema(
+    summary="Taleplerimi listele / talep oluştur",
+    description="GET: role=student|tutor ve status filtreleriyle kendi taleplerini getir. POST: yalnızca öğrenci talep oluşturur.",
+    parameters=[
+        OpenApiParameter(name="role", type=OpenApiTypes.STR, description="Listeleme için: student veya tutor"),
+        OpenApiParameter(name="status", type=OpenApiTypes.STR, description="pending|approved|rejected"),
+    ],
+)
 class LessonRequestListCreateView(generics.ListCreateAPIView):
     serializer_class = LessonRequestSerializer
 
@@ -27,6 +36,8 @@ class LessonRequestListCreateView(generics.ListCreateAPIView):
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return LessonRequest.objects.none()
         user = self.request.user
         status_param = self.request.query_params.get("status")
         role_param = self.request.query_params.get("role")
@@ -41,7 +52,9 @@ class LessonRequestListCreateView(generics.ListCreateAPIView):
         return qs
 
 
+@extend_schema(summary="Talebi onayla/ret et", description="Yalnızca ilgili eğitmen PATCH ile approved|rejected yapabilir.")
 class LessonRequestUpdateView(generics.UpdateAPIView):
+    http_method_names = ["patch", "options", "head"]
     serializer_class = LessonRequestUpdateSerializer
     queryset = LessonRequest.objects.all()
 

@@ -150,6 +150,8 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ),
+    # PDF örnekleri ile aynı görünüm için Decimal sayıları string değil sayı olarak dön
+    "COERCE_DECIMAL_TO_STRING": False,
 }
 
 SPECTACULAR_SETTINGS = {
