@@ -129,10 +129,3 @@ The app uses `http://127.0.0.1:8001/api` as the backend base URL. This works out
 - Mobile: Flutter, Riverpod, Dio, flutter_secure_storage, json_serializable
 
 ---
-
-## 5) Roadmap / Next Steps
-- Tutor rating after completed lessons (1–5 stars, optional comment)
-- Enhanced search/ordering UI for the tutors list
-- Infinite scroll + pull-to-refresh for paginated lists
-- Additional tests (validations, error scenarios)
-
