@@ -40,11 +40,11 @@ class LessonRequestsNotifier extends StateNotifier<LessonRequestsState> {
 
   LessonRequestsNotifier(this._apiClient) : super(LessonRequestsState());
 
-  Future<void> loadLessonRequests({String? status}) async {
+  Future<void> loadLessonRequests({String? status, String? role}) async {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
-      final response = await _apiClient.getLessonRequests(status: status);
+      final response = await _apiClient.getLessonRequests(status: status, role: role);
       final List<dynamic> results = response['results'];
       final lessonRequests = results.map((json) => LessonRequest.fromJson(json)).toList();
       
@@ -61,7 +61,7 @@ class LessonRequestsNotifier extends StateNotifier<LessonRequestsState> {
     }
   }
 
-  Future<void> createLessonRequest(CreateLessonRequest request) async {
+  Future<void> createLessonRequest(CreateLessonRequest request, String userRole) async {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
@@ -69,7 +69,7 @@ class LessonRequestsNotifier extends StateNotifier<LessonRequestsState> {
       await _apiClient.createLessonRequest(request);
       print('Lesson request created successfully');
       // Reload the list after creating
-      await loadLessonRequests(status: state.statusFilter);
+      await loadLessonRequests(status: state.statusFilter, role: userRole);
     } catch (e) {
       print('Error creating lesson request: $e');
       state = state.copyWith(
@@ -79,13 +79,13 @@ class LessonRequestsNotifier extends StateNotifier<LessonRequestsState> {
     }
   }
 
-  Future<void> updateLessonRequest(int id, UpdateLessonRequest request) async {
+  Future<void> updateLessonRequest(int id, UpdateLessonRequest request, String userRole) async {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
       await _apiClient.updateLessonRequest(id, request);
       // Reload the list after updating
-      await loadLessonRequests(status: state.statusFilter);
+      await loadLessonRequests(status: state.statusFilter, role: userRole);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,

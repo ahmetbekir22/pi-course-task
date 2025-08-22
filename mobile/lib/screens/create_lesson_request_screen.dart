@@ -4,6 +4,7 @@ import '../models/lesson_request.dart';
 import '../providers/subjects_provider.dart';
 import '../providers/lesson_requests_provider.dart';
 import 'package:intl/intl.dart';
+import '../providers/auth_provider.dart';
 
 class CreateLessonRequestScreen extends ConsumerStatefulWidget {
   final int tutorId;
@@ -81,13 +82,16 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
         note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
       );
 
-      await ref.read(lessonRequestsProvider.notifier).createLessonRequest(request);
-      
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ders talebi başarıyla oluşturuldu')),
-        );
+      final user = ref.read(authProvider).user;
+      if (user != null) {
+        await ref.read(lessonRequestsProvider.notifier).createLessonRequest(request, user.role);
+        
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ders talebi başarıyla oluşturuldu')),
+          );
+        }
       }
     }
   }

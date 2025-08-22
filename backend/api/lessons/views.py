@@ -50,13 +50,21 @@ class LessonRequestListCreateView(generics.ListCreateAPIView):
         role_param = self.request.query_params.get("role")
 
         qs = LessonRequest.objects.select_related("student", "tutor", "subject")
+        
+        # Role-based filtering
         if role_param == "student":
             qs = qs.filter(student=user)
-        else:
+        elif role_param == "tutor":
             qs = qs.filter(tutor=user)
+        else:
+            # Default: show all requests for the user (both as student and tutor)
+            qs = qs.filter(student=user) | qs.filter(tutor=user)
+        
+        # Status filtering
         if status_param in (LessonRequest.Status.PENDING, LessonRequest.Status.APPROVED, LessonRequest.Status.REJECTED):
             qs = qs.filter(status=status_param)
-        return qs
+        
+        return qs.distinct()
 
 
 @extend_schema(summary="Talebi onayla/ret et", description="Yalnızca ilgili eğitmen PATCH ile approved|rejected yapabilir.")

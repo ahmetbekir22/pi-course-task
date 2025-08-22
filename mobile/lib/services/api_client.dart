@@ -143,7 +143,9 @@ class ApiClient {
     if (limit != null) queryParams['limit'] = limit;
     if (offset != null) queryParams['offset'] = offset;
 
+    print('API Client: Getting lesson requests with params: $queryParams');
     final response = await _dio.get('/lesson-requests', queryParameters: queryParams);
+    print('API Client: Lesson requests response: ${response.data}');
     return response.data;
   }
 
@@ -173,8 +175,7 @@ class ApiClient {
     }
   }
 
-  Future<LessonRequest> updateLessonRequest(int id, UpdateLessonRequest request) async {
-    final response = await _dio.patch('/lesson-requests/$id', data: request.toJson());
-    return LessonRequest.fromJson(response.data);
+  Future<void> updateLessonRequest(int id, UpdateLessonRequest request) async {
+    await _dio.patch('/lesson-requests/$id', data: request.toJson());
   }
 } 

@@ -13,6 +13,9 @@ class LessonRequestSerializer(serializers.ModelSerializer):
         source="tutor", queryset=User.objects.all(), write_only=True
     )
     subject_id = serializers.PrimaryKeyRelatedField(source="subject", queryset=Subject.objects.all(), write_only=True)
+    student = serializers.PrimaryKeyRelatedField(read_only=True)
+    tutor = serializers.PrimaryKeyRelatedField(read_only=True)
+    subject = serializers.PrimaryKeyRelatedField(read_only=True)
     status = serializers.CharField(read_only=True)
     note = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
@@ -20,6 +23,9 @@ class LessonRequestSerializer(serializers.ModelSerializer):
         model = LessonRequest
         fields = [
             "id",
+            "student",
+            "tutor",
+            "subject",
             "tutor_id",
             "subject_id",
             "start_time",
@@ -28,7 +34,7 @@ class LessonRequestSerializer(serializers.ModelSerializer):
             "status",
             "created_at",
         ]
-        read_only_fields = ["status", "created_at"]
+        read_only_fields = ["student", "tutor", "subject", "status", "created_at"]
 
     def validate(self, attrs):
         print(f"Validating lesson request data: {attrs}")

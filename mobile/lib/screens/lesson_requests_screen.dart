@@ -19,7 +19,10 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(lessonRequestsProvider.notifier).loadLessonRequests();
+      final user = ref.read(authProvider).user;
+      if (user != null) {
+        ref.read(lessonRequestsProvider.notifier).loadLessonRequests(role: user.role);
+      }
     });
   }
 
@@ -70,7 +73,10 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
                   setState(() {
                     _statusFilter = null;
                   });
-                  ref.read(lessonRequestsProvider.notifier).loadLessonRequests();
+                  final user = ref.read(authProvider).user;
+                  if (user != null) {
+                    ref.read(lessonRequestsProvider.notifier).loadLessonRequests(role: user.role);
+                  }
                 },
               ),
               FilterChip(
@@ -80,9 +86,13 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
                   setState(() {
                     _statusFilter = selected ? 'pending' : null;
                   });
-                  ref.read(lessonRequestsProvider.notifier).loadLessonRequests(
-                    status: selected ? 'pending' : null,
-                  );
+                  final user = ref.read(authProvider).user;
+                  if (user != null) {
+                    ref.read(lessonRequestsProvider.notifier).loadLessonRequests(
+                      status: selected ? 'pending' : null,
+                      role: user.role,
+                    );
+                  }
                 },
               ),
               FilterChip(
@@ -92,9 +102,13 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
                   setState(() {
                     _statusFilter = selected ? 'approved' : null;
                   });
-                  ref.read(lessonRequestsProvider.notifier).loadLessonRequests(
-                    status: selected ? 'approved' : null,
-                  );
+                  final user = ref.read(authProvider).user;
+                  if (user != null) {
+                    ref.read(lessonRequestsProvider.notifier).loadLessonRequests(
+                      status: selected ? 'approved' : null,
+                      role: user.role,
+                    );
+                  }
                 },
               ),
               FilterChip(
@@ -104,9 +118,13 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
                   setState(() {
                     _statusFilter = selected ? 'rejected' : null;
                   });
-                  ref.read(lessonRequestsProvider.notifier).loadLessonRequests(
-                    status: selected ? 'rejected' : null,
-                  );
+                  final user = ref.read(authProvider).user;
+                  if (user != null) {
+                    ref.read(lessonRequestsProvider.notifier).loadLessonRequests(
+                      status: selected ? 'rejected' : null,
+                      role: user.role,
+                    );
+                  }
                 },
               ),
             ],
@@ -198,10 +216,14 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        await ref.read(lessonRequestsProvider.notifier).updateLessonRequest(
-                          request.id,
-                          UpdateLessonRequest(status: 'approved'),
-                        );
+                        final user = ref.read(authProvider).user;
+                        if (user != null) {
+                          await ref.read(lessonRequestsProvider.notifier).updateLessonRequest(
+                            request.id,
+                            UpdateLessonRequest(status: 'approved'),
+                            user.role,
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
@@ -214,10 +236,14 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        await ref.read(lessonRequestsProvider.notifier).updateLessonRequest(
-                          request.id,
-                          UpdateLessonRequest(status: 'rejected'),
-                        );
+                        final user = ref.read(authProvider).user;
+                        if (user != null) {
+                          await ref.read(lessonRequestsProvider.notifier).updateLessonRequest(
+                            request.id,
+                            UpdateLessonRequest(status: 'rejected'),
+                            user.role,
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
