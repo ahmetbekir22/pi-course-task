@@ -290,15 +290,6 @@ flutter build apk --release  # Android
 flutter build ios --release  # iOS
 ```
 
-## 📈 Future Enhancements
-
-### Planned Features
-- **Real-time Notifications**: WebSocket integration for instant updates
-- **Video Calling**: Integration with video calling APIs
-- **Payment Processing**: Stripe integration for lesson payments
-- **Rating System**: Student-tutor rating and review system
-- **Calendar Integration**: Google Calendar/Outlook integration
-- **Push Notifications**: Mobile push notifications for updates
 
 ### Scalability Considerations
 - **Microservices**: Break down into smaller, focused services
