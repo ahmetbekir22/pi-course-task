@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import '../providers/subjects_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -15,8 +16,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  final _bioController = TextEditingController();
+  final _hourlyRateController = TextEditingController();
   bool _isLogin = true;
   String _selectedRole = 'student';
+  List<int> _selectedSubjectIds = [];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isLogin) {
+        ref.read(subjectsProvider.notifier).loadSubjects();
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -24,6 +38,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _passwordController.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
+    _bioController.dispose();
+    _hourlyRateController.dispose();
     super.dispose();
   }
 
@@ -43,6 +59,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _selectedRole,
           firstName: _firstNameController.text.trim().isEmpty ? null : _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim().isEmpty ? null : _lastNameController.text.trim(),
+          bio: _selectedRole == 'tutor' ? _bioController.text.trim() : null,
+          hourlyRate: _selectedRole == 'tutor' ? int.tryParse(_hourlyRateController.text.trim()) : null,
+          subjectIds: _selectedRole == 'tutor' ? _selectedSubjectIds : null,
         );
       }
     }
@@ -87,9 +106,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return null;
   }
 
+  String? _validateHourlyRate(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Saatlik ücret gerekli';
+    }
+    
+    final rate = int.tryParse(value);
+    if (rate == null || rate < 0) {
+      return 'Geçerli bir sayı girin (>= 0)';
+    }
+    
+    return null;
+  }
+
+  String? _validateSubjects() {
+    if (_selectedRole == 'tutor' && _selectedSubjectIds.isEmpty) {
+      return 'En az bir konu seçmelisiniz';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final subjectsState = ref.watch(subjectsProvider);
     
     final screenSize = MediaQuery.of(context).size;
     final screenHeight = screenSize.height;
@@ -206,6 +246,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               SizedBox(height: spacing),
               
               if (!_isLogin) ...[
+                // Role Selection
                 DropdownButtonFormField<String>(
                   value: _selectedRole,
                   decoration: InputDecoration(
@@ -220,7 +261,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   onChanged: (value) {
                     setState(() {
                       _selectedRole = value!;
+                      _selectedSubjectIds.clear();
                     });
+                    // Load subjects if tutor is selected
+                    if (value == 'tutor') {
+                      ref.read(subjectsProvider.notifier).loadSubjects();
+                    }
                     // Clear error when user changes role
                     if (authState.error != null) {
                       ref.read(authProvider.notifier).clearError();
@@ -228,6 +274,94 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   },
                 ),
                 SizedBox(height: spacing),
+                
+                // Tutor-specific fields
+                if (_selectedRole == 'tutor') ...[
+                  // Bio
+                  TextFormField(
+                    controller: _bioController,
+                    decoration: InputDecoration(
+                      labelText: 'Biyografi (Opsiyonel)',
+                      border: const OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.description, size: iconSize),
+                      hintText: 'Kendinizi tanıtın...',
+                    ),
+                    maxLines: 3,
+                    style: TextStyle(fontSize: fontSize),
+                    onChanged: (value) {
+                      if (authState.error != null) {
+                        ref.read(authProvider.notifier).clearError();
+                      }
+                    },
+                  ),
+                  SizedBox(height: spacing),
+                  
+                  // Hourly Rate
+                  TextFormField(
+                    controller: _hourlyRateController,
+                    decoration: InputDecoration(
+                      labelText: 'Saatlik Ücret *',
+                      border: const OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.attach_money, size: iconSize),
+                      hintText: '₺ 0',
+                    ),
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(fontSize: fontSize),
+                    validator: _validateHourlyRate,
+                    onChanged: (value) {
+                      if (authState.error != null) {
+                        ref.read(authProvider.notifier).clearError();
+                      }
+                    },
+                  ),
+                  SizedBox(height: spacing),
+                  
+                  // Subject Selection
+                  if (subjectsState.subjects.isNotEmpty) ...[
+                    Text(
+                      'Verebileceğiniz Dersler *',
+                      style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: spacing * 0.5),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade400),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Column(
+                        children: [
+                          ...subjectsState.subjects.map((subject) => CheckboxListTile(
+                            title: Text(subject.name, style: TextStyle(fontSize: fontSize * 0.9)),
+                            value: _selectedSubjectIds.contains(subject.id),
+                            onChanged: (bool? value) {
+                              setState(() {
+                                if (value == true) {
+                                  _selectedSubjectIds.add(subject.id);
+                                } else {
+                                  _selectedSubjectIds.remove(subject.id);
+                                }
+                              });
+                              if (authState.error != null) {
+                                ref.read(authProvider.notifier).clearError();
+                              }
+                            },
+                            controlAffinity: ListTileControlAffinity.leading,
+                            contentPadding: EdgeInsets.symmetric(horizontal: spacing),
+                          )),
+                        ],
+                      ),
+                    ),
+                    if (_validateSubjects() != null)
+                      Padding(
+                        padding: EdgeInsets.only(top: spacing * 0.5),
+                        child: Text(
+                          _validateSubjects()!,
+                          style: TextStyle(color: Colors.red, fontSize: fontSize * 0.8),
+                        ),
+                      ),
+                    SizedBox(height: spacing),
+                  ],
+                ],
               ],
               
               if (authState.error != null) ...[
@@ -276,8 +410,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onPressed: () {
                   setState(() {
                     _isLogin = !_isLogin;
+                    _selectedSubjectIds.clear();
                     ref.read(authProvider.notifier).clearError();
                   });
+                  if (!_isLogin) {
+                    ref.read(subjectsProvider.notifier).loadSubjects();
+                  }
                 },
                 child: Text(
                   _isLogin

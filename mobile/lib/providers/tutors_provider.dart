@@ -48,6 +48,7 @@ class TutorsState {
   final int? selectedSubjectId;
   final String searchQuery;
   final String ordering;
+  final User? tutorDetail;
 
   TutorsState({
     this.tutors = const [],
@@ -56,6 +57,7 @@ class TutorsState {
     this.selectedSubjectId,
     this.searchQuery = '',
     this.ordering = '-rating',
+    this.tutorDetail,
   });
 
   TutorsState copyWith({
@@ -65,6 +67,7 @@ class TutorsState {
     int? selectedSubjectId,
     String? searchQuery,
     String? ordering,
+    User? tutorDetail,
   }) {
     return TutorsState(
       tutors: tutors ?? this.tutors,
@@ -73,6 +76,7 @@ class TutorsState {
       selectedSubjectId: selectedSubjectId ?? this.selectedSubjectId,
       searchQuery: searchQuery ?? this.searchQuery,
       ordering: ordering ?? this.ordering,
+      tutorDetail: tutorDetail ?? this.tutorDetail,
     );
   }
 }
@@ -125,6 +129,31 @@ class TutorsNotifier extends StateNotifier<TutorsState> {
         isLoading: false,
         error: errorMessage,
       );
+    }
+  }
+
+  Future<void> loadTutorDetail(int tutorId) async {
+    try {
+      final tutor = await _apiClient.getTutorDetail(tutorId);
+      state = state.copyWith(tutorDetail: tutor);
+    } catch (e) {
+      String errorMessage = 'Eğitmen detayları yüklenemedi';
+      
+      if (e is DioException) {
+        if (e.type == DioExceptionType.connectionTimeout) {
+          errorMessage = 'Bağlantı zaman aşımı';
+        } else if (e.type == DioExceptionType.connectionError) {
+          errorMessage = 'Sunucuya bağlanılamıyor';
+        } else if (e.response?.statusCode == 401) {
+          errorMessage = 'Oturum süresi doldu, lütfen tekrar giriş yapın';
+        } else if (e.response?.statusCode == 404) {
+          errorMessage = 'Eğitmen bulunamadı';
+        } else if (e.response?.statusCode == 500) {
+          errorMessage = 'Sunucu hatası, lütfen daha sonra tekrar deneyin';
+        }
+      }
+      
+      state = state.copyWith(error: errorMessage);
     }
   }
 

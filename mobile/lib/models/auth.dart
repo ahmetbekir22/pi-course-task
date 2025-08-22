@@ -37,6 +37,11 @@ class RegisterRequest {
   final String role;
   final String? firstName;
   final String? lastName;
+  final String? bio;
+  @JsonKey(name: 'hourly_rate')
+  final int? hourlyRate;
+  @JsonKey(name: 'subject_ids')
+  final List<int>? subjectIds;
 
   RegisterRequest({
     required this.email,
@@ -44,6 +49,9 @@ class RegisterRequest {
     required this.role,
     this.firstName,
     this.lastName,
+    this.bio,
+    this.hourlyRate,
+    this.subjectIds,
   });
 
   factory RegisterRequest.fromJson(Map<String, dynamic> json) => _$RegisterRequestFromJson(json);
@@ -57,11 +65,14 @@ class UpdateProfileRequest {
   final String? bio;
   @JsonKey(name: 'hourly_rate')
   final int? hourlyRate;
+  @JsonKey(name: 'subject_ids')
+  final List<int>? subjectIds;
 
   UpdateProfileRequest({
     this.gradeLevel,
     this.bio,
     this.hourlyRate,
+    this.subjectIds,
   });
 
   factory UpdateProfileRequest.fromJson(Map<String, dynamic> json) => _$UpdateProfileRequestFromJson(json);

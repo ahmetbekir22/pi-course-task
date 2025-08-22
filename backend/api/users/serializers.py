@@ -30,7 +30,7 @@ class TutorProfileSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     role = serializers.CharField(read_only=True)
-    tutor_profile = TutorProfileSerializer(read_only=True)
+    tutor_profile = serializers.SerializerMethodField()
     student_profile = StudentProfileSerializer(read_only=True)
 
     class Meta:
@@ -49,6 +49,17 @@ class UserSerializer(serializers.ModelSerializer):
     def get_name(self, obj: User) -> str:
         full_name = (obj.first_name or "").strip() + " " + (obj.last_name or "").strip()
         return full_name.strip() or obj.email
+
+    def get_tutor_profile(self, obj: User) -> dict | None:
+        if obj.role == 'tutor':
+            try:
+                return TutorProfileSerializer(obj.tutor_profile).data
+            except:
+                return None
+        return None
+
+    def to_representation(self, instance):
+        return super().to_representation(instance)
 
 
 class RegisterSerializer(serializers.Serializer):

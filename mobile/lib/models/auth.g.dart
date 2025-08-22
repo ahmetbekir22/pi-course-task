@@ -36,6 +36,11 @@ RegisterRequest _$RegisterRequestFromJson(Map<String, dynamic> json) =>
       role: json['role'] as String,
       firstName: json['firstName'] as String?,
       lastName: json['lastName'] as String?,
+      bio: json['bio'] as String?,
+      hourlyRate: (json['hourly_rate'] as num?)?.toInt(),
+      subjectIds: (json['subject_ids'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toList(),
     );
 
 Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
@@ -45,6 +50,9 @@ Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
       'role': instance.role,
       'firstName': instance.firstName,
       'lastName': instance.lastName,
+      'bio': instance.bio,
+      'hourly_rate': instance.hourlyRate,
+      'subject_ids': instance.subjectIds,
     };
 
 UpdateProfileRequest _$UpdateProfileRequestFromJson(
@@ -53,6 +61,9 @@ UpdateProfileRequest _$UpdateProfileRequestFromJson(
       gradeLevel: json['grade_level'] as String?,
       bio: json['bio'] as String?,
       hourlyRate: (json['hourly_rate'] as num?)?.toInt(),
+      subjectIds: (json['subject_ids'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toList(),
     );
 
 Map<String, dynamic> _$UpdateProfileRequestToJson(
@@ -61,4 +72,5 @@ Map<String, dynamic> _$UpdateProfileRequestToJson(
       'grade_level': instance.gradeLevel,
       'bio': instance.bio,
       'hourly_rate': instance.hourlyRate,
+      'subject_ids': instance.subjectIds,
     };

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import '../providers/subjects_provider.dart';
 
 class ProfileEditScreen extends ConsumerStatefulWidget {
   const ProfileEditScreen({super.key});
@@ -14,10 +15,15 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   final TextEditingController _gradeLevelController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _hourlyRateController = TextEditingController();
+  List<int> _selectedSubjectIds = [];
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(subjectsProvider.notifier).loadSubjects();
+    });
+    
     final user = ref.read(authProvider).user;
     if (user != null) {
       if (user.role == 'student') {
@@ -25,6 +31,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       } else if (user.role == 'tutor') {
         _bioController.text = user.tutorProfile?.bio ?? '';
         _hourlyRateController.text = (user.tutorProfile?.hourlyRate ?? 0).toString();
+        _selectedSubjectIds = user.tutorProfile?.subjects.map((s) => s.id).toList() ?? [];
       }
     }
   }
@@ -48,11 +55,13 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     final gradeLevel = isStudent ? _gradeLevelController.text.trim() : null;
     final bio = !isStudent ? _bioController.text.trim() : null;
     final hourlyRate = !isStudent ? int.tryParse(_hourlyRateController.text.trim()) : null;
+    final subjectIds = !isStudent ? _selectedSubjectIds : null;
 
     await ref.read(authProvider.notifier).updateProfile(
       gradeLevel: gradeLevel?.isEmpty == true ? null : gradeLevel,
       bio: bio?.isEmpty == true ? null : bio,
       hourlyRate: hourlyRate,
+      subjectIds: subjectIds,
     );
 
     final authState = ref.read(authProvider);
@@ -67,6 +76,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final subjectsState = ref.watch(subjectsProvider);
     final user = authState.user!;
     final isStudent = user.role == 'student';
     
@@ -156,6 +166,41 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                     return null;
                   },
                 ),
+                SizedBox(height: spacing),
+                
+                // Subject Selection
+                if (subjectsState.subjects.isNotEmpty) ...[
+                  Text(
+                    'Verebileceğiniz Dersler',
+                    style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: spacing * 0.5),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Column(
+                      children: [
+                        ...subjectsState.subjects.map((subject) => CheckboxListTile(
+                          title: Text(subject.name, style: TextStyle(fontSize: fontSize * 0.9)),
+                          value: _selectedSubjectIds.contains(subject.id),
+                          onChanged: (bool? value) {
+                            setState(() {
+                              if (value == true) {
+                                _selectedSubjectIds.add(subject.id);
+                              } else {
+                                _selectedSubjectIds.remove(subject.id);
+                              }
+                            });
+                          },
+                          controlAffinity: ListTileControlAffinity.leading,
+                          contentPadding: EdgeInsets.symmetric(horizontal: spacing),
+                        )),
+                      ],
+                    ),
+                  ),
+                ],
               ],
 
               SizedBox(height: largeSpacing),

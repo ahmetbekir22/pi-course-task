@@ -33,7 +33,7 @@ class LessonRequestFlowTests(APITestCase):
         payload = {
             "tutor_id": self.tutor.id,
             "subject_id": self.math.id,
-            "start_time": "2025-08-21T10:00:00Z",
+            "start_time": "2025-12-25T10:00:00Z",
             "duration_minutes": 60,
             "note": "Test lesson",
         }

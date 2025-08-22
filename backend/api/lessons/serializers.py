@@ -8,7 +8,7 @@ from subjects.models import Subject
 User = get_user_model()
 
 
-class SubjectSerializer(serializers.ModelSerializer):
+class LessonSubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subject
         fields = ['id', 'name']
@@ -21,7 +21,7 @@ class LessonRequestSerializer(serializers.ModelSerializer):
     subject_id = serializers.PrimaryKeyRelatedField(source="subject", queryset=Subject.objects.all(), write_only=True)
     student = serializers.PrimaryKeyRelatedField(read_only=True)
     tutor = serializers.PrimaryKeyRelatedField(read_only=True)
-    subject = SubjectSerializer(read_only=True)
+    subject = LessonSubjectSerializer(read_only=True)
     status = serializers.CharField(read_only=True)
     note = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 

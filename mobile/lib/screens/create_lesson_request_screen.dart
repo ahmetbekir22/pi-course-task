@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/lesson_request.dart';
 import '../providers/subjects_provider.dart';
 import '../providers/lesson_requests_provider.dart';
+import '../providers/tutors_provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/auth_provider.dart';
 
@@ -26,12 +27,14 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
   int? _selectedSubjectId;
   DateTime? _selectedDateTime;
   int _durationMinutes = 60;
+  String? _subjectValidationError;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(subjectsProvider.notifier).loadSubjects();
+      ref.read(tutorsProvider.notifier).loadTutorDetail(widget.tutorId);
     });
   }
 
@@ -79,7 +82,43 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
     }
   }
 
+  String? _validateSubject(int? subjectId) {
+    if (subjectId == null) {
+      return 'Lütfen bir konu seçin';
+    }
+
+    final tutorsState = ref.read(tutorsProvider);
+    final tutor = tutorsState.tutorDetail;
+    
+    if (tutor != null && tutor.tutorProfile != null) {
+      final tutorSubjectIds = tutor.tutorProfile!.subjects.map((s) => s.id).toList();
+      
+      // Eğer eğitmenin belirli konuları varsa, sadece onları kontrol et
+      if (tutorSubjectIds.isNotEmpty && !tutorSubjectIds.contains(subjectId)) {
+        final selectedSubject = ref.read(subjectsProvider).subjects
+            .firstWhere((s) => s.id == subjectId, orElse: () => throw Exception('Subject not found'));
+        
+        setState(() {
+          _subjectValidationError = 'Bu eğitmen ${selectedSubject.name} dersini vermiyor. Lütfen başka bir konu seçin.';
+        });
+        return 'Bu eğitmen bu dersi vermiyor';
+      }
+    }
+    
+    setState(() {
+      _subjectValidationError = null;
+    });
+    return null;
+  }
+
   Future<void> _submit() async {
+    // Subject validation'ı manuel olarak çağır
+    final subjectError = _validateSubject(_selectedSubjectId);
+    if (subjectError != null) {
+      setState(() {});
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       final request = CreateLessonRequest(
         tutorId: widget.tutorId,
@@ -107,6 +146,7 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
   Widget build(BuildContext context) {
     final subjectsState = ref.watch(subjectsProvider);
     final lessonRequestsState = ref.watch(lessonRequestsProvider);
+    final tutorsState = ref.watch(tutorsProvider);
     
     final screenSize = MediaQuery.of(context).size;
     final screenHeight = screenSize.height;
@@ -121,6 +161,10 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
     final fontSize = screenWidth * 0.04;
     final buttonPadding = screenHeight * 0.02;
     final errorPadding = screenWidth * 0.03;
+
+    // Eğitmenin konularını al
+    final tutorSubjectIds = tutorsState.tutorDetail?.tutorProfile?.subjects.map((s) => s.id).toList() ?? [];
+    final hasTutorSubjects = tutorSubjectIds.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -154,6 +198,13 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
                               'Eğitmen',
                               style: TextStyle(fontSize: fontSize * 0.9),
                             ),
+                            if (hasTutorSubjects) ...[
+                              SizedBox(height: spacing * 0.5),
+                              Text(
+                                'Verdiği Dersler: ${tutorsState.tutorDetail!.tutorProfile!.subjects.map((s) => s.name).join(', ')}',
+                                style: TextStyle(fontSize: fontSize * 0.8, color: Colors.green.shade700),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -172,22 +223,59 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
                   border: const OutlineInputBorder(),
                   prefixIcon: Icon(Icons.subject, size: iconSize * 0.6),
                 ),
-                items: subjectsState.subjects.map((subject) => DropdownMenuItem<int>(
-                  value: subject.id,
-                  child: Text(subject.name, style: TextStyle(fontSize: fontSize)),
-                )).toList(),
-                validator: (value) {
-                  if (value == null) {
-                    return 'Lütfen bir konu seçin';
-                  }
-                  return null;
-                },
+                items: subjectsState.subjects.map((subject) {
+                  final isTutorSubject = !hasTutorSubjects || tutorSubjectIds.contains(subject.id);
+                  return DropdownMenuItem<int>(
+                    value: subject.id,
+                    child: Row(
+                      children: [
+                        Text(subject.name, style: TextStyle(fontSize: fontSize)),
+                        if (!isTutorSubject) ...[
+                          SizedBox(width: spacing),
+                          Icon(Icons.warning, size: fontSize * 0.8, color: Colors.orange),
+                          SizedBox(width: spacing * 0.5),
+                          Text(
+                            '(Bu eğitmen vermiyor)',
+                            style: TextStyle(fontSize: fontSize * 0.7, color: Colors.orange),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                }).toList(),
+                validator: (value) => _validateSubject(value),
                 onChanged: (value) {
                   setState(() {
                     _selectedSubjectId = value;
+                    _validateSubject(value); // Validation'ı çağır
                   });
                 },
               ),
+              
+              // Subject validation error/warning
+              if (_subjectValidationError != null) ...[
+                SizedBox(height: spacing * 0.5),
+                Container(
+                  padding: EdgeInsets.all(errorPadding * 0.7),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(errorPadding * 0.5),
+                    border: Border.all(color: Colors.orange.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, size: fontSize, color: Colors.orange.shade700),
+                      SizedBox(width: spacing),
+                      Expanded(
+                        child: Text(
+                          _subjectValidationError!,
+                          style: TextStyle(fontSize: fontSize * 0.8, color: Colors.orange.shade700),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               
               SizedBox(height: spacing),
               

@@ -95,7 +95,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> register(String email, String password, String role, {String? firstName, String? lastName}) async {
+  Future<void> register(String email, String password, String role, {
+    String? firstName, 
+    String? lastName,
+    String? bio,
+    int? hourlyRate,
+    List<int>? subjectIds,
+  }) async {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
@@ -106,6 +112,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         role: role,
         firstName: firstName,
         lastName: lastName,
+        bio: bio,
+        hourlyRate: hourlyRate,
+        subjectIds: subjectIds,
       );
       await _apiClient.register(request);
       
@@ -141,6 +150,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
             }
           } else if (data.containsKey('role')) {
             errorMessage = 'Geçersiz rol seçimi';
+          } else if (data.containsKey('bio')) {
+            errorMessage = 'Biyografi geçersiz';
+          } else if (data.containsKey('hourly_rate')) {
+            errorMessage = 'Saatlik ücret geçersiz';
+          } else if (data.containsKey('subject_ids')) {
+            errorMessage = 'Seçilen konular geçersiz';
           } else if (data.containsKey('detail')) {
             errorMessage = data['detail'].toString();
           } else {
@@ -199,6 +214,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String? gradeLevel,
     String? bio,
     int? hourlyRate,
+    List<int>? subjectIds,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     
@@ -207,6 +223,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         gradeLevel: gradeLevel,
         bio: bio,
         hourlyRate: hourlyRate,
+        subjectIds: subjectIds,
       );
       final updatedUser = await _apiClient.updateProfile(request);
       state = state.copyWith(user: updatedUser);
@@ -222,6 +239,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
             errorMessage = 'Biyografi geçersiz';
           } else if (data.containsKey('hourly_rate')) {
             errorMessage = 'Saatlik ücret geçersiz';
+          } else if (data.containsKey('subject_ids')) {
+            errorMessage = 'Seçilen konular geçersiz';
           }
         }
       }
