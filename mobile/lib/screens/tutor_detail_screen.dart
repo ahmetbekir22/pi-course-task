@@ -28,12 +28,15 @@ class _TutorDetailScreenState extends ConsumerState<TutorDetailScreen> {
   Future<void> _loadTutorDetail() async {
     try {
       final apiClient = ref.read(apiClientProvider);
+      print('Loading tutor detail for ID: ${widget.tutorId}');
       final tutorData = await apiClient.getTutorDetail(widget.tutorId);
+      print('Tutor data received: ${tutorData.toJson()}');
       setState(() {
         tutor = tutorData;
         isLoading = false;
       });
     } catch (e) {
+      print('Error loading tutor detail: $e');
       setState(() {
         error = e.toString();
         isLoading = false;

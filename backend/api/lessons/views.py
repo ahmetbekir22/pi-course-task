@@ -35,6 +35,13 @@ class LessonRequestListCreateView(generics.ListCreateAPIView):
             return [IsStudent()]
         return [permissions.IsAuthenticated()]
 
+    def create(self, request, *args, **kwargs):
+        print(f"Received lesson request data: {request.data}")
+        print(f"User: {request.user.email if request.user.is_authenticated else 'Anonymous'}, Role: {request.user.role if request.user.is_authenticated else 'None'}")
+        print(f"Headers: {dict(request.headers)}")
+        print(f"Authentication: {request.auth}")
+        return super().create(request, *args, **kwargs)
+
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return LessonRequest.objects.none()

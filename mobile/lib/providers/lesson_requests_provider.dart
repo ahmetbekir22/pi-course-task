@@ -65,10 +65,13 @@ class LessonRequestsNotifier extends StateNotifier<LessonRequestsState> {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
+      print('Creating lesson request: ${request.toJson()}');
       await _apiClient.createLessonRequest(request);
+      print('Lesson request created successfully');
       // Reload the list after creating
       await loadLessonRequests(status: state.statusFilter);
     } catch (e) {
+      print('Error creating lesson request: $e');
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),

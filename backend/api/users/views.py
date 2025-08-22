@@ -67,16 +67,12 @@ class TutorListView(generics.ListAPIView):
 
 @extend_schema(summary="Eğitmen detayı")
 class TutorDetailView(generics.RetrieveAPIView):
-    serializer_class = TutorListSerializer
+    serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
 
     def get_object(self):
         user_id = self.kwargs.get("id")
-        return (
-            TutorProfile.objects.select_related("user")
-            .prefetch_related("subjects")
-            .get(user__id=user_id)
-        )
+        return User.objects.select_related("tutor_profile", "student_profile").prefetch_related("tutor_profile__subjects").get(id=user_id, role="tutor")
 
 from django.shortcuts import render
 

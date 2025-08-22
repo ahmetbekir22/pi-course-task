@@ -17,7 +17,7 @@ class LessonRequest(models.Model):
     subject = models.ForeignKey("subjects.Subject", on_delete=models.PROTECT, related_name="lesson_requests")
     start_time = models.DateTimeField()
     duration_minutes = models.PositiveIntegerField()
-    note = models.TextField(blank=True)
+    note = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
 

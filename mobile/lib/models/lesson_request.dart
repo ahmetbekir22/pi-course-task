@@ -5,9 +5,9 @@ part 'lesson_request.g.dart';
 @JsonSerializable()
 class LessonRequest {
   final int id;
-  final int student;
-  final int tutor;
-  final int subject;
+  final int? student;
+  final int? tutor;
+  final int? subject;
   @JsonKey(name: 'start_time')
   final DateTime startTime;
   @JsonKey(name: 'duration_minutes')
@@ -19,9 +19,9 @@ class LessonRequest {
 
   LessonRequest({
     required this.id,
-    required this.student,
-    required this.tutor,
-    required this.subject,
+    this.student,
+    this.tutor,
+    this.subject,
     required this.startTime,
     required this.durationMinutes,
     this.note,
@@ -39,7 +39,7 @@ class CreateLessonRequest {
   final int tutorId;
   @JsonKey(name: 'subject_id')
   final int subjectId;
-  @JsonKey(name: 'start_time')
+  @JsonKey(name: 'start_time', toJson: _dateTimeToJson)
   final DateTime startTime;
   @JsonKey(name: 'duration_minutes')
   final int durationMinutes;
@@ -55,6 +55,10 @@ class CreateLessonRequest {
 
   factory CreateLessonRequest.fromJson(Map<String, dynamic> json) => _$CreateLessonRequestFromJson(json);
   Map<String, dynamic> toJson() => _$CreateLessonRequestToJson(this);
+  
+  static String _dateTimeToJson(DateTime dateTime) {
+    return dateTime.toUtc().toIso8601String();
+  }
 }
 
 @JsonSerializable()

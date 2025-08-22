@@ -148,8 +148,29 @@ class ApiClient {
   }
 
   Future<LessonRequest> createLessonRequest(CreateLessonRequest request) async {
-    final response = await _dio.post('/lesson-requests', data: request.toJson());
-    return LessonRequest.fromJson(response.data);
+    print('API Client: Creating lesson request with data: ${request.toJson()}');
+    
+    // Check if we have a valid token
+    final token = await _storage.read(key: 'access_token');
+    print('API Client: Token: ${token != null ? "Present" : "Missing"}');
+    print('API Client: Base URL: $baseUrl');
+    print('API Client: Full URL: $baseUrl/lesson-requests');
+    
+    try {
+      final response = await _dio.post('/lesson-requests', data: request.toJson());
+      print('API Client: Response received: ${response.data}');
+      return LessonRequest.fromJson(response.data);
+    } catch (e) {
+      print('API Client: Error details: $e');
+      if (e is DioException) {
+        print('API Client: DioException type: ${e.type}');
+        print('API Client: Response status: ${e.response?.statusCode}');
+        print('API Client: Response data: ${e.response?.data}');
+        print('API Client: Request URL: ${e.requestOptions.uri}');
+        print('API Client: Request headers: ${e.requestOptions.headers}');
+      }
+      rethrow;
+    }
   }
 
   Future<LessonRequest> updateLessonRequest(int id, UpdateLessonRequest request) async {

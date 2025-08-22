@@ -9,9 +9,9 @@ part of 'lesson_request.dart';
 LessonRequest _$LessonRequestFromJson(Map<String, dynamic> json) =>
     LessonRequest(
       id: (json['id'] as num).toInt(),
-      student: (json['student'] as num).toInt(),
-      tutor: (json['tutor'] as num).toInt(),
-      subject: (json['subject'] as num).toInt(),
+      student: (json['student'] as num?)?.toInt(),
+      tutor: (json['tutor'] as num?)?.toInt(),
+      subject: (json['subject'] as num?)?.toInt(),
       startTime: DateTime.parse(json['start_time'] as String),
       durationMinutes: (json['duration_minutes'] as num).toInt(),
       note: json['note'] as String?,
@@ -46,7 +46,7 @@ Map<String, dynamic> _$CreateLessonRequestToJson(
     <String, dynamic>{
       'tutor_id': instance.tutorId,
       'subject_id': instance.subjectId,
-      'start_time': instance.startTime.toIso8601String(),
+      'start_time': CreateLessonRequest._dateTimeToJson(instance.startTime),
       'duration_minutes': instance.durationMinutes,
       'note': instance.note,
     };
