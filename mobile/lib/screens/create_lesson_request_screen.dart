@@ -56,6 +56,13 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
       final time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.now(),
+        initialEntryMode: TimePickerEntryMode.dial,
+        builder: (context, child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
       );
       
       if (time != null) {
