@@ -107,6 +107,20 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
   Widget build(BuildContext context) {
     final subjectsState = ref.watch(subjectsProvider);
     final lessonRequestsState = ref.watch(lessonRequestsProvider);
+    
+    final screenSize = MediaQuery.of(context).size;
+    final screenHeight = screenSize.height;
+    final screenWidth = screenSize.width;
+    
+    // Dynamic dimensions based on screen size
+    final padding = screenWidth * 0.04; // 4% of screen width
+    final cardPadding = screenWidth * 0.04;
+    final spacing = screenHeight * 0.02; // 2% of screen height
+    final largeSpacing = screenHeight * 0.03;
+    final iconSize = screenWidth * 0.08; // 8% of screen width
+    final fontSize = screenWidth * 0.04;
+    final buttonPadding = screenHeight * 0.02;
+    final errorPadding = screenWidth * 0.03;
 
     return Scaffold(
       appBar: AppBar(
@@ -114,7 +128,7 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(padding),
         child: Form(
           key: _formKey,
           child: Column(
@@ -123,20 +137,23 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
               // Tutor Info
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(cardPadding),
                   child: Row(
                     children: [
-                      const Icon(Icons.person, size: 32),
-                      const SizedBox(width: 16),
+                      Icon(Icons.person, size: iconSize),
+                      SizedBox(width: spacing * 2),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               widget.tutorName,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize),
                             ),
-                            Text('Eğitmen'),
+                            Text(
+                              'Eğitmen',
+                              style: TextStyle(fontSize: fontSize * 0.9),
+                            ),
                           ],
                         ),
                       ),
@@ -145,19 +162,19 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
                 ),
               ),
               
-              const SizedBox(height: 24),
+              SizedBox(height: largeSpacing),
               
               // Subject Selection
               DropdownButtonFormField<int>(
                 value: _selectedSubjectId,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Konu *',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.subject),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.subject, size: iconSize * 0.6),
                 ),
                 items: subjectsState.subjects.map((subject) => DropdownMenuItem<int>(
                   value: subject.id,
-                  child: Text(subject.name),
+                  child: Text(subject.name, style: TextStyle(fontSize: fontSize)),
                 )).toList(),
                 validator: (value) {
                   if (value == null) {
@@ -172,7 +189,7 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
                 },
               ),
               
-              const SizedBox(height: 16),
+              SizedBox(height: spacing),
               
               // Date and Time Selection
               InkWell(
@@ -181,7 +198,7 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
                   decoration: InputDecoration(
                     labelText: 'Tarih ve Saat *',
                     border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.calendar_today),
+                    prefixIcon: Icon(Icons.calendar_today, size: iconSize * 0.6),
                   ),
                   child: Text(
                     _selectedDateTime != null
@@ -189,26 +206,27 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
                         : 'Tarih ve saat seçin',
                     style: TextStyle(
                       color: _selectedDateTime != null ? null : Colors.grey[600],
+                      fontSize: fontSize,
                     ),
                   ),
                 ),
               ),
               
-              const SizedBox(height: 16),
+              SizedBox(height: spacing),
               
               // Duration Selection
               DropdownButtonFormField<int>(
                 value: _durationMinutes,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Süre *',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.timer),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.timer, size: iconSize * 0.6),
                 ),
-                items: const [
-                  DropdownMenuItem(value: 30, child: Text('30 dakika')),
-                  DropdownMenuItem(value: 60, child: Text('1 saat')),
-                  DropdownMenuItem(value: 90, child: Text('1.5 saat')),
-                  DropdownMenuItem(value: 120, child: Text('2 saat')),
+                items: [
+                  DropdownMenuItem(value: 30, child: Text('30 dakika', style: TextStyle(fontSize: fontSize))),
+                  DropdownMenuItem(value: 60, child: Text('1 saat', style: TextStyle(fontSize: fontSize))),
+                  DropdownMenuItem(value: 90, child: Text('1.5 saat', style: TextStyle(fontSize: fontSize))),
+                  DropdownMenuItem(value: 120, child: Text('2 saat', style: TextStyle(fontSize: fontSize))),
                 ],
                 onChanged: (value) {
                   setState(() {
@@ -217,37 +235,38 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
                 },
               ),
               
-              const SizedBox(height: 16),
+              SizedBox(height: spacing),
               
               // Note
               TextFormField(
                 controller: _noteController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Not (Opsiyonel)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.note),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.note, size: iconSize * 0.6),
                   hintText: 'Ders hakkında ek bilgiler...',
                 ),
                 maxLines: 3,
+                style: TextStyle(fontSize: fontSize),
               ),
               
-              const SizedBox(height: 24),
+              SizedBox(height: largeSpacing),
               
               // Error Display
               if (lessonRequestsState.error != null) ...[
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(errorPadding),
                   decoration: BoxDecoration(
                     color: Colors.red.shade100,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(errorPadding * 0.7),
                     border: Border.all(color: Colors.red.shade300),
                   ),
                   child: Text(
                     lessonRequestsState.error!,
-                    style: TextStyle(color: Colors.red.shade700),
+                    style: TextStyle(color: Colors.red.shade700, fontSize: fontSize * 0.9),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: spacing),
               ],
               
               // Submit Button
@@ -256,13 +275,16 @@ class _CreateLessonRequestScreenState extends ConsumerState<CreateLessonRequestS
                 child: ElevatedButton(
                   onPressed: lessonRequestsState.isLoading ? null : _submit,
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: EdgeInsets.symmetric(vertical: buttonPadding),
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   ),
                   child: lessonRequestsState.isLoading
                       ? const CircularProgressIndicator()
-                      : const Text('Ders Talebi Oluştur'),
+                      : Text(
+                          'Ders Talebi Oluştur',
+                          style: TextStyle(fontSize: fontSize),
+                        ),
                 ),
               ),
             ],

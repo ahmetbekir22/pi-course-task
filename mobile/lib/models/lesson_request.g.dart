@@ -11,7 +11,9 @@ LessonRequest _$LessonRequestFromJson(Map<String, dynamic> json) =>
       id: (json['id'] as num).toInt(),
       student: (json['student'] as num?)?.toInt(),
       tutor: (json['tutor'] as num?)?.toInt(),
-      subject: (json['subject'] as num?)?.toInt(),
+      subject: json['subject'] == null
+          ? null
+          : Subject.fromJson(json['subject'] as Map<String, dynamic>),
       startTime: DateTime.parse(json['start_time'] as String),
       durationMinutes: (json['duration_minutes'] as num).toInt(),
       note: json['note'] as String?,

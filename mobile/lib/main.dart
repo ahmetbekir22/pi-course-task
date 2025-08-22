@@ -8,9 +8,7 @@ void main() {
   
   runApp(const ProviderScope(child: MyApp()));
 }
-
 class MyApp extends ConsumerWidget {
-  //debugShowCheckedModeBanner: false;
   const MyApp({super.key});
 
   @override
@@ -18,6 +16,7 @@ class MyApp extends ConsumerWidget {
     final authState = ref.watch(authProvider);
 
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Pi Course',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),

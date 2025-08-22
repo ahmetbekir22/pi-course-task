@@ -53,21 +53,29 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
   }
 
   Widget _buildStatusFilter() {
+    final screenSize = MediaQuery.of(context).size;
+    final screenHeight = screenSize.height;
+    final screenWidth = screenSize.width;
+    
+    final padding = screenWidth * 0.04;
+    final spacing = screenHeight * 0.01;
+    final fontSize = screenWidth * 0.035;
+    
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(padding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Durum Filtresi:',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: spacing),
           Wrap(
-            spacing: 8,
+            spacing: spacing * 2,
             children: [
               FilterChip(
-                label: const Text('Tümü'),
+                label: Text('Tümü', style: TextStyle(fontSize: fontSize * 0.9)),
                 selected: _statusFilter == null,
                 onSelected: (selected) {
                   setState(() {
@@ -80,7 +88,7 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
                 },
               ),
               FilterChip(
-                label: const Text('Beklemede'),
+                label: Text('Beklemede', style: TextStyle(fontSize: fontSize * 0.9)),
                 selected: _statusFilter == 'pending',
                 onSelected: (selected) {
                   setState(() {
@@ -96,7 +104,7 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
                 },
               ),
               FilterChip(
-                label: const Text('Onaylandı'),
+                label: Text('Onaylandı', style: TextStyle(fontSize: fontSize * 0.9)),
                 selected: _statusFilter == 'approved',
                 onSelected: (selected) {
                   setState(() {
@@ -112,7 +120,7 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
                 },
               ),
               FilterChip(
-                label: const Text('Reddedildi'),
+                label: Text('Reddedildi', style: TextStyle(fontSize: fontSize * 0.9)),
                 selected: _statusFilter == 'rejected',
                 onSelected: (selected) {
                   setState(() {
@@ -135,10 +143,22 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
   }
 
   Widget _buildLessonRequestCard(LessonRequest request, bool isTutor) {
+    final screenSize = MediaQuery.of(context).size;
+    final screenHeight = screenSize.height;
+    final screenWidth = screenSize.width;
+    
+    final margin = screenHeight * 0.02;
+    final padding = screenWidth * 0.04;
+    final spacing = screenHeight * 0.01;
+    final iconSize = screenWidth * 0.04;
+    final fontSize = screenWidth * 0.035;
+    final statusPadding = screenWidth * 0.02;
+    final buttonSpacing = screenWidth * 0.02;
+    
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: margin),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(padding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -148,66 +168,75 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
                 Expanded(
                   child: Text(
                     'Ders Talebi #${request.id}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize),
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: EdgeInsets.symmetric(horizontal: statusPadding, vertical: statusPadding * 0.5),
                   decoration: BoxDecoration(
                     color: _getStatusColor(request.status),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(statusPadding * 1.5),
                   ),
                   child: Text(
                     _getStatusText(request.status),
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                    style: TextStyle(color: Colors.white, fontSize: fontSize * 0.8),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: spacing * 1.5),
             
             // Subject and DateTime
             Row(
               children: [
-                Icon(Icons.subject, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 8),
-                Text('Konu ID: ${request.subject}'),
+                Icon(Icons.subject, size: iconSize, color: Colors.grey[600]),
+                SizedBox(width: spacing * 2),
+                Text(
+                  'Konu: ${request.subject?.name ?? 'Bilinmiyor'}',
+                  style: TextStyle(fontSize: fontSize * 0.9),
+                ),
                 const Spacer(),
-                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 8),
-                Text(DateFormat('dd/MM/yyyy HH:mm').format(request.startTime)),
+                Icon(Icons.calendar_today, size: iconSize, color: Colors.grey[600]),
+                SizedBox(width: spacing * 2),
+                Text(
+                  DateFormat('dd/MM/yyyy HH:mm').format(request.startTime),
+                  style: TextStyle(fontSize: fontSize * 0.9),
+                ),
               ],
             ),
             
-            const SizedBox(height: 8),
+            SizedBox(height: spacing * 2),
             
             // Duration
             Row(
               children: [
-                Icon(Icons.timer, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 8),
-                Text('${request.durationMinutes} dakika'),
+                Icon(Icons.timer, size: iconSize, color: Colors.grey[600]),
+                SizedBox(width: spacing * 2),
+                Text(
+                  '${request.durationMinutes} dakika',
+                  style: TextStyle(fontSize: fontSize * 0.9),
+                ),
               ],
             ),
             
             if (request.note != null && request.note!.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              SizedBox(height: spacing * 2),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.note, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 8),
+                  Icon(Icons.note, size: iconSize, color: Colors.grey[600]),
+                  SizedBox(width: spacing * 2),
                   Expanded(
                     child: Text(
                       'Not: ${request.note}',
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: TextStyle(color: Colors.grey[600], fontSize: fontSize * 0.9),
                     ),
                   ),
                 ],
               ),
             ],
             
-            const SizedBox(height: 12),
+            SizedBox(height: spacing * 1.5),
             
             // Action buttons for tutors
             if (isTutor && request.status == 'pending') ...[
@@ -229,10 +258,10 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
                       ),
-                      child: const Text('Onayla'),
+                      child: Text('Onayla', style: TextStyle(fontSize: fontSize * 0.9)),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: buttonSpacing),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
@@ -249,7 +278,7 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
                       ),
-                      child: const Text('Reddet'),
+                      child: Text('Reddet', style: TextStyle(fontSize: fontSize * 0.9)),
                     ),
                   ),
                 ],
@@ -266,6 +295,18 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
     final lessonRequestsState = ref.watch(lessonRequestsProvider);
     final authState = ref.watch(authProvider);
     final isTutor = authState.user?.role == 'tutor';
+    
+    final screenSize = MediaQuery.of(context).size;
+    final screenHeight = screenSize.height;
+    final screenWidth = screenSize.width;
+    
+    final padding = screenWidth * 0.06;
+    final spacing = screenHeight * 0.02;
+    final largeSpacing = screenHeight * 0.03;
+    final iconSize = screenWidth * 0.16;
+    final fontSize = screenWidth * 0.04;
+    final smallFontSize = screenWidth * 0.035;
+    final listPadding = screenWidth * 0.04;
 
     return Scaffold(
       appBar: AppBar(
@@ -281,27 +322,84 @@ class _LessonRequestsScreenState extends ConsumerState<LessonRequestsScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : lessonRequestsState.error != null
                     ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Hata: ${lessonRequestsState.error}',
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () => ref.read(lessonRequestsProvider.notifier).loadLessonRequests(),
-                              child: const Text('Tekrar Dene'),
-                            ),
-                          ],
+                        child: Padding(
+                          padding: EdgeInsets.all(padding),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: iconSize,
+                                color: Colors.orange.shade600,
+                              ),
+                              SizedBox(height: spacing),
+                              Text(
+                                lessonRequestsState.error!,
+                                style: TextStyle(
+                                  color: Colors.orange.shade700,
+                                  fontSize: fontSize,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: largeSpacing),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  final user = ref.read(authProvider).user;
+                                  if (user != null) {
+                                    ref.read(lessonRequestsProvider.notifier).loadLessonRequests(role: user.role);
+                                  }
+                                },
+                                icon: const Icon(Icons.refresh),
+                                label: Text('Tekrar Dene', style: TextStyle(fontSize: fontSize * 0.9)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange.shade600,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       )
                     : lessonRequestsState.lessonRequests.isEmpty
-                        ? const Center(
-                            child: Text('Henüz ders talebi bulunmuyor'),
+                        ? Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(padding),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.inbox_outlined,
+                                    size: iconSize,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                  SizedBox(height: spacing),
+                                  Text(
+                                    isTutor 
+                                        ? 'Henüz gelen ders talebi bulunmuyor'
+                                        : 'Henüz ders talebi oluşturmadınız',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: fontSize,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  SizedBox(height: spacing * 0.5),
+                                  Text(
+                                    isTutor
+                                        ? 'Öğrenciler ders talebi oluşturduğunda burada görünecek'
+                                        : 'Eğitmen bulup ders talebi oluşturabilirsiniz',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade500,
+                                      fontSize: smallFontSize,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
                           )
                         : ListView.builder(
-                            padding: const EdgeInsets.all(16),
+                            padding: EdgeInsets.all(listPadding),
                             itemCount: lessonRequestsState.lessonRequests.length,
                             itemBuilder: (context, index) {
                               final request = lessonRequestsState.lessonRequests[index];

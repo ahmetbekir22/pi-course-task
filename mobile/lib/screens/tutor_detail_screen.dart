@@ -46,6 +46,21 @@ class _TutorDetailScreenState extends ConsumerState<TutorDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final screenHeight = screenSize.height;
+    final screenWidth = screenSize.width;
+    
+    // Dynamic dimensions based on screen size
+    final padding = screenWidth * 0.04; // 4% of screen width
+    final cardPadding = screenWidth * 0.04;
+    final spacing = screenHeight * 0.02; // 2% of screen height
+    final smallSpacing = screenHeight * 0.01;
+    final iconSize = screenWidth * 0.05; // 5% of screen width
+    final fontSize = screenWidth * 0.04;
+    final buttonPadding = screenHeight * 0.02;
+    final chipSpacing = screenWidth * 0.02;
+    final chipRunSpacing = screenHeight * 0.01;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Eğitmen Detayı'),
@@ -60,9 +75,9 @@ class _TutorDetailScreenState extends ConsumerState<TutorDetailScreen> {
                     children: [
                       Text(
                         'Hata: $error',
-                        style: const TextStyle(color: Colors.red),
+                        style: TextStyle(color: Colors.red, fontSize: fontSize),
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: spacing),
                       ElevatedButton(
                         onPressed: _loadTutorDetail,
                         child: const Text('Tekrar Dene'),
@@ -71,73 +86,74 @@ class _TutorDetailScreenState extends ConsumerState<TutorDetailScreen> {
                   ),
                 )
               : tutor == null
-                  ? const Center(child: Text('Eğitmen bulunamadı'))
+                  ? Center(child: Text('Eğitmen bulunamadı', style: TextStyle(fontSize: fontSize)))
                   : SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(padding),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Tutor Info Card
                           Card(
                             child: Padding(
-                              padding: const EdgeInsets.all(16),
+                              padding: EdgeInsets.all(cardPadding),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     tutor!.name ?? 'İsimsiz Eğitmen',
-                                    style: Theme.of(context).textTheme.headlineSmall,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    tutor!.email,
-                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: Colors.grey[600],
+                                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                      fontSize: fontSize * 1.5,
                                     ),
                                   ),
-                                  const SizedBox(height: 16),
+                                  SizedBox(height: spacing),
                                   
                                   // Rating and Hourly Rate
                                   Row(
                                     children: [
-                                      Icon(Icons.star, color: Colors.amber, size: 20),
+                                      Icon(Icons.star, color: Colors.amber, size: iconSize),
                                       Text(
                                         ' ${tutor!.tutorProfile?.rating?.toStringAsFixed(1) ?? 'N/A'}',
-                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                        style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
                                       ),
-                                      const SizedBox(width: 24),
-                                      Icon(Icons.attach_money, size: 20),
+                                      SizedBox(width: spacing * 1.5),
+                                      Icon(Icons.attach_money, size: iconSize),
                                       Text(
                                         ' ${tutor!.tutorProfile?.hourlyRate ?? 0}/saat',
-                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                        style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 16),
+                                  SizedBox(height: spacing),
                                   
                                   // Bio
                                   if (tutor!.tutorProfile?.bio != null && tutor!.tutorProfile!.bio!.isNotEmpty) ...[
                                     Text(
                                       'Hakkında:',
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize),
                                     ),
-                                    const SizedBox(height: 8),
-                                    Text(tutor!.tutorProfile!.bio!),
-                                    const SizedBox(height: 16),
+                                    SizedBox(height: smallSpacing),
+                                    Text(
+                                      tutor!.tutorProfile!.bio!,
+                                      style: TextStyle(fontSize: fontSize * 0.9),
+                                    ),
+                                    SizedBox(height: spacing),
                                   ],
                                   
                                   // Subjects
                                   if (tutor!.tutorProfile?.subjects.isNotEmpty == true) ...[
                                     Text(
                                       'Uzmanlık Alanları:',
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize),
                                     ),
-                                    const SizedBox(height: 8),
+                                    SizedBox(height: smallSpacing),
                                     Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
+                                      spacing: chipSpacing,
+                                      runSpacing: chipRunSpacing,
                                       children: tutor!.tutorProfile!.subjects.map((subject) => Chip(
-                                        label: Text(subject.name),
+                                        label: Text(
+                                          subject.name,
+                                          style: TextStyle(fontSize: fontSize * 0.8),
+                                        ),
                                         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                                       )).toList(),
                                     ),
@@ -147,7 +163,7 @@ class _TutorDetailScreenState extends ConsumerState<TutorDetailScreen> {
                             ),
                           ),
                           
-                          const SizedBox(height: 24),
+                          SizedBox(height: spacing * 1.5),
                           
                           // Request Lesson Button
                           SizedBox(
@@ -164,10 +180,13 @@ class _TutorDetailScreenState extends ConsumerState<TutorDetailScreen> {
                                   ),
                                 );
                               },
-                              icon: const Icon(Icons.school),
-                              label: const Text('Ders Talep Et'),
+                              icon: Icon(Icons.school, size: iconSize),
+                              label: Text(
+                                'Ders Talep Et',
+                                style: TextStyle(fontSize: fontSize),
+                              ),
                               style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding: EdgeInsets.symmetric(vertical: buttonPadding),
                                 backgroundColor: Theme.of(context).colorScheme.primary,
                                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
                               ),

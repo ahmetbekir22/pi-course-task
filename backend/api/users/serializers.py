@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from .models import StudentProfile, TutorProfile
+from subjects.models import Subject
 
 User = get_user_model()
 
@@ -56,19 +57,54 @@ class RegisterSerializer(serializers.Serializer):
     role = serializers.ChoiceField(choices=[("student", "student"), ("tutor", "tutor")])
     first_name = serializers.CharField(required=False, allow_blank=True)
     last_name = serializers.CharField(required=False, allow_blank=True)
+    # Tutor specific fields
+    bio = serializers.CharField(required=False, allow_blank=True)
+    hourly_rate = serializers.IntegerField(required=False, min_value=0)
+    subject_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        required=False,
+        default=list
+    )
 
     def validate_email(self, value: str) -> str:
         if User.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError("Email already registered")
         return value
 
+    def validate_subject_ids(self, value: list[int]) -> list[int]:
+        if not value:
+            return value
+        existing_subject_ids = set(Subject.objects.values_list('id', flat=True))
+        invalid_ids = [sid for sid in value if sid not in existing_subject_ids]
+        if invalid_ids:
+            raise serializers.ValidationError(f"Invalid subject IDs: {invalid_ids}")
+        return value
+
     def create(self, validated_data: dict[str, Any]) -> User:
         role = validated_data.pop("role")
         password = validated_data.pop("password")
+        
+        # Extract tutor-specific fields
+        bio = validated_data.pop("bio", "")
+        hourly_rate = validated_data.pop("hourly_rate", 0)
+        subject_ids = validated_data.pop("subject_ids", [])
+        
         user = User(**validated_data, role=role)
         user.set_password(password)
         user.save()
-        # Profiles are created by post_save signal; no explicit create here
+        
+        # Create tutor profile with subjects if role is tutor
+        if role == "tutor":
+            profile = user.tutor_profile
+            profile.bio = bio
+            profile.hourly_rate = hourly_rate
+            profile.save()
+            
+            # Add subjects
+            if subject_ids:
+                subjects = Subject.objects.filter(id__in=subject_ids)
+                profile.subjects.set(subjects)
+        
         return user
 
 
@@ -78,10 +114,23 @@ class MeUpdateSerializer(serializers.Serializer):
     # Tutor
     bio = serializers.CharField(required=False, allow_blank=True)
     hourly_rate = serializers.IntegerField(required=False)
+    subject_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        required=False
+    )
 
     def validate_hourly_rate(self, value: int) -> int:
         if value is not None and value < 0:
             raise serializers.ValidationError("hourly_rate must be >= 0")
+        return value
+
+    def validate_subject_ids(self, value: list[int]) -> list[int]:
+        if not value:
+            return value
+        existing_subject_ids = set(Subject.objects.values_list('id', flat=True))
+        invalid_ids = [sid for sid in value if sid not in existing_subject_ids]
+        if invalid_ids:
+            raise serializers.ValidationError(f"Invalid subject IDs: {invalid_ids}")
         return value
 
     def save(self, **kwargs: Any) -> User:
@@ -97,6 +146,13 @@ class MeUpdateSerializer(serializers.Serializer):
                 profile.bio = self.validated_data["bio"]
             if "hourly_rate" in self.validated_data:
                 profile.hourly_rate = self.validated_data["hourly_rate"]
+            if "subject_ids" in self.validated_data:
+                subject_ids = self.validated_data["subject_ids"]
+                if subject_ids:
+                    subjects = Subject.objects.filter(id__in=subject_ids)
+                    profile.subjects.set(subjects)
+                else:
+                    profile.subjects.clear()
             profile.save()
         return user
 

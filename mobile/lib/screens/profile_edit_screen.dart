@@ -69,6 +69,19 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     final authState = ref.watch(authProvider);
     final user = authState.user!;
     final isStudent = user.role == 'student';
+    
+    final screenSize = MediaQuery.of(context).size;
+    final screenHeight = screenSize.height;
+    final screenWidth = screenSize.width;
+    
+    // Dynamic dimensions based on screen size
+    final padding = screenWidth * 0.04; // 4% of screen width
+    final spacing = screenHeight * 0.02; // 2% of screen height
+    final largeSpacing = screenHeight * 0.03;
+    final iconSize = screenWidth * 0.06; // 6% of screen width
+    final fontSize = screenWidth * 0.04;
+    final buttonPadding = screenHeight * 0.02;
+    final errorPadding = screenWidth * 0.03;
 
     return Scaffold(
       appBar: AppBar(
@@ -76,7 +89,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(padding),
         child: Form(
           key: _formKey,
           child: Column(
@@ -84,20 +97,27 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
             children: [
               Card(
                 child: ListTile(
-                  leading: const Icon(Icons.person),
-                  title: Text(user.name ?? user.email),
-                  subtitle: Text(isStudent ? 'Öğrenci' : 'Eğitmen'),
+                  leading: Icon(Icons.person, size: iconSize),
+                  title: Text(
+                    user.name ?? user.email,
+                    style: TextStyle(fontSize: fontSize),
+                  ),
+                  subtitle: Text(
+                    isStudent ? 'Öğrenci' : 'Eğitmen',
+                    style: TextStyle(fontSize: fontSize * 0.9),
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: spacing),
 
               if (isStudent) ...[
                 TextFormField(
                   controller: _gradeLevelController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Sınıf Seviyesi',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
+                  style: TextStyle(fontSize: fontSize),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Lütfen sınıf seviyesini girin';
@@ -108,21 +128,23 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
               ] else ...[
                 TextFormField(
                   controller: _bioController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Biyografi',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                   maxLines: 3,
+                  style: TextStyle(fontSize: fontSize),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: spacing),
                 TextFormField(
                   controller: _hourlyRateController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Saatlik Ücret',
                     prefixText: '₺ ',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
+                  style: TextStyle(fontSize: fontSize),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Lütfen saatlik ücreti girin';
@@ -136,38 +158,41 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                 ),
               ],
 
-              const SizedBox(height: 24),
+              SizedBox(height: largeSpacing),
 
               if (authState.error != null) ...[
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(errorPadding),
                   decoration: BoxDecoration(
                     color: Colors.red.shade100,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(errorPadding * 0.7),
                     border: Border.all(color: Colors.red.shade300),
                   ),
                   child: Text(
                     authState.error!,
-                    style: TextStyle(color: Colors.red.shade700),
+                    style: TextStyle(color: Colors.red.shade700, fontSize: fontSize * 0.9),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: spacing),
               ],
 
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: authState.isLoading ? null : _submit,
-                  icon: const Icon(Icons.save),
+                  icon: Icon(Icons.save, size: iconSize),
                   label: authState.isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                      ? SizedBox(
+                          width: fontSize,
+                          height: fontSize,
+                          child: CircularProgressIndicator(strokeWidth: fontSize * 0.1),
                         )
-                      : const Text('Kaydet'),
+                      : Text(
+                          'Kaydet',
+                          style: TextStyle(fontSize: fontSize),
+                        ),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: EdgeInsets.symmetric(vertical: buttonPadding),
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   ),

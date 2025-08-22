@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'subject.dart';
 
 part 'lesson_request.g.dart';
 
@@ -7,7 +8,7 @@ class LessonRequest {
   final int id;
   final int? student;
   final int? tutor;
-  final int? subject;
+  final Subject? subject;
   @JsonKey(name: 'start_time')
   final DateTime startTime;
   @JsonKey(name: 'duration_minutes')

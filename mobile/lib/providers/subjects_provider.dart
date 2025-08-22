@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import '../models/subject.dart';
 import '../services/api_client.dart';
 import 'auth_provider.dart';
@@ -43,9 +44,23 @@ class SubjectsNotifier extends StateNotifier<SubjectsState> {
       final subjects = await _apiClient.getSubjects();
       state = state.copyWith(subjects: subjects, isLoading: false);
     } catch (e) {
+      String errorMessage = 'Konular yüklenemedi';
+      
+      if (e is DioException) {
+        if (e.type == DioExceptionType.connectionTimeout) {
+          errorMessage = 'Bağlantı zaman aşımı';
+        } else if (e.type == DioExceptionType.connectionError) {
+          errorMessage = 'Sunucuya bağlanılamıyor';
+        } else if (e.response?.statusCode == 401) {
+          errorMessage = 'Oturum süresi doldu, lütfen tekrar giriş yapın';
+        } else if (e.response?.statusCode == 500) {
+          errorMessage = 'Sunucu hatası, lütfen daha sonra tekrar deneyin';
+        }
+      }
+      
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: errorMessage,
       );
     }
   }

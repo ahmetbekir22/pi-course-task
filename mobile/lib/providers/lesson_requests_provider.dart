@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/lesson_request.dart';
 import '../services/api_client.dart';
 import 'auth_provider.dart';
+import 'package:dio/dio.dart';
 
 final lessonRequestsProvider = StateNotifierProvider<LessonRequestsNotifier, LessonRequestsState>((ref) {
   return LessonRequestsNotifier(ref.read(apiClientProvider));
@@ -54,9 +55,23 @@ class LessonRequestsNotifier extends StateNotifier<LessonRequestsState> {
         statusFilter: status,
       );
     } catch (e) {
+      String errorMessage = 'Ders talepleri yüklenemedi';
+      
+      if (e is DioException) {
+        if (e.type == DioExceptionType.connectionTimeout) {
+          errorMessage = 'Bağlantı zaman aşımı';
+        } else if (e.type == DioExceptionType.connectionError) {
+          errorMessage = 'Sunucuya bağlanılamıyor';
+        } else if (e.response?.statusCode == 401) {
+          errorMessage = 'Oturum süresi doldu, lütfen tekrar giriş yapın';
+        } else if (e.response?.statusCode == 500) {
+          errorMessage = 'Sunucu hatası, lütfen daha sonra tekrar deneyin';
+        }
+      }
+      
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: errorMessage,
       );
     }
   }
@@ -72,9 +87,25 @@ class LessonRequestsNotifier extends StateNotifier<LessonRequestsState> {
       await loadLessonRequests(status: state.statusFilter, role: userRole);
     } catch (e) {
       print('Error creating lesson request: $e');
+      String errorMessage = 'Ders talebi oluşturulamadı';
+      
+      if (e is DioException) {
+        if (e.type == DioExceptionType.connectionTimeout) {
+          errorMessage = 'Bağlantı zaman aşımı';
+        } else if (e.type == DioExceptionType.connectionError) {
+          errorMessage = 'Sunucuya bağlanılamıyor';
+        } else if (e.response?.statusCode == 400) {
+          errorMessage = 'Geçersiz bilgi, lütfen kontrol edin';
+        } else if (e.response?.statusCode == 401) {
+          errorMessage = 'Oturum süresi doldu, lütfen tekrar giriş yapın';
+        } else if (e.response?.statusCode == 500) {
+          errorMessage = 'Sunucu hatası, lütfen daha sonra tekrar deneyin';
+        }
+      }
+      
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: errorMessage,
       );
     }
   }
@@ -87,9 +118,27 @@ class LessonRequestsNotifier extends StateNotifier<LessonRequestsState> {
       // Reload the list after updating
       await loadLessonRequests(status: state.statusFilter, role: userRole);
     } catch (e) {
+      String errorMessage = 'Ders talebi güncellenemedi';
+      
+      if (e is DioException) {
+        if (e.type == DioExceptionType.connectionTimeout) {
+          errorMessage = 'Bağlantı zaman aşımı';
+        } else if (e.type == DioExceptionType.connectionError) {
+          errorMessage = 'Sunucuya bağlanılamıyor';
+        } else if (e.response?.statusCode == 400) {
+          errorMessage = 'Geçersiz bilgi, lütfen kontrol edin';
+        } else if (e.response?.statusCode == 401) {
+          errorMessage = 'Oturum süresi doldu, lütfen tekrar giriş yapın';
+        } else if (e.response?.statusCode == 403) {
+          errorMessage = 'Bu işlem için yetkiniz yok';
+        } else if (e.response?.statusCode == 500) {
+          errorMessage = 'Sunucu hatası, lütfen daha sonra tekrar deneyin';
+        }
+      }
+      
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: errorMessage,
       );
     }
   }

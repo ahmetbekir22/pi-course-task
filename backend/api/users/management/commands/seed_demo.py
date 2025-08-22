@@ -12,7 +12,7 @@ class Command(BaseCommand):
         User = get_user_model()
 
         # Subjects
-        subject_names = ["Mathematics", "Physics", "Chemistry"]
+        subject_names = ["Matematik", "Fizik", "Kimya"]
         subjects = []
         for name in subject_names:
             subj, _ = Subject.objects.get_or_create(name=name)
@@ -30,8 +30,8 @@ class Command(BaseCommand):
 
         # Tutors
         tutor_data = [
-            ("tutor1@demo.com", "Ayşe", "Demir", 500, 4.8, ["Mathematics", "Physics"]),
-            ("tutor2@demo.com", "Mehmet", "Yıldız", 400, 4.5, ["Chemistry"]),
+            ("tutor1@demo.com", "Ayşe", "Demir", 500, 4.8, ["Matematik", "Fizik"]),
+            ("tutor2@demo.com", "Mehmet", "Yıldız", 400, 4.5, ["Kimya"]),
         ]
         for email, first_name, last_name, rate, rating, subs in tutor_data:
             tutor, created = User.objects.get_or_create(

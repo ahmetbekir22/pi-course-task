@@ -12,6 +12,18 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final user = authState.user!; // User is guaranteed to be not null here
+    
+    final screenSize = MediaQuery.of(context).size;
+    final screenHeight = screenSize.height;
+    final screenWidth = screenSize.width;
+    
+    // Dynamic dimensions based on screen size
+    final padding = screenWidth * 0.04; // 4% of screen width
+    final cardPadding = screenWidth * 0.04;
+    final spacing = screenHeight * 0.02; // 2% of screen height
+    final largeSpacing = screenHeight * 0.03;
+    final iconSize = screenWidth * 0.08; // 8% of screen width
+    final fontSize = screenWidth * 0.04;
 
     return Scaffold(
       appBar: AppBar(
@@ -25,33 +37,47 @@ class HomeScreen extends ConsumerWidget {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(padding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(cardPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Hoş geldiniz, ${user.name ?? user.email}!',
-                      style: Theme.of(context).textTheme.headlineSmall,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontSize: fontSize * 1.5,
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    Text('Rol: ${user.role == 'student' ? 'Öğrenci' : 'Eğitmen'}'),
+                    SizedBox(height: spacing),
+                    Text(
+                      'Rol: ${user.role == 'student' ? 'Öğrenci' : 'Eğitmen'}',
+                      style: TextStyle(fontSize: fontSize),
+                    ),
                     if (user.role == 'student' && user.studentProfile?.gradeLevel != null)
-                      Text('Sınıf: ${user.studentProfile!.gradeLevel}'),
+                      Text(
+                        'Sınıf: ${user.studentProfile!.gradeLevel}',
+                        style: TextStyle(fontSize: fontSize),
+                      ),
                     if (user.role == 'tutor' && user.tutorProfile != null) ...[
-                      Text('Saatlik Ücret: \$${user.tutorProfile!.hourlyRate}'),
-                      Text('Puan: ${user.tutorProfile!.rating?.toStringAsFixed(1) ?? 'N/A'}/5'),
+                      Text(
+                        'Saatlik Ücret: \$${user.tutorProfile!.hourlyRate}',
+                        style: TextStyle(fontSize: fontSize),
+                      ),
+                      Text(
+                        'Puan: ${user.tutorProfile!.rating?.toStringAsFixed(1) ?? 'N/A'}/5',
+                        style: TextStyle(fontSize: fontSize),
+                      ),
                     ],
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: largeSpacing),
             
             if (user.role == 'student') ...[
               _buildNavigationCard(
@@ -68,7 +94,7 @@ class HomeScreen extends ConsumerWidget {
                   );
                 },
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: spacing),
               _buildNavigationCard(
                 context,
                 'Ders Taleplerim',
@@ -100,7 +126,7 @@ class HomeScreen extends ConsumerWidget {
               ),
             ],
             
-            const SizedBox(height: 16),
+            SizedBox(height: spacing),
             _buildNavigationCard(
               context,
               'Profil Düzenle',
@@ -128,12 +154,18 @@ class HomeScreen extends ConsumerWidget {
     IconData icon,
     VoidCallback onTap,
   ) {
+    final screenSize = MediaQuery.of(context).size;
+    final screenWidth = screenSize.width;
+    
+    final iconSize = screenWidth * 0.08;
+    final fontSize = screenWidth * 0.04;
+    
     return Card(
       child: ListTile(
-        leading: Icon(icon, size: 32),
-        title: Text(title),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.arrow_forward_ios),
+        leading: Icon(icon, size: iconSize),
+        title: Text(title, style: TextStyle(fontSize: fontSize)),
+        subtitle: Text(subtitle, style: TextStyle(fontSize: fontSize * 0.9)),
+        trailing: Icon(Icons.arrow_forward_ios, size: iconSize * 0.6),
         onTap: onTap,
       ),
     );
