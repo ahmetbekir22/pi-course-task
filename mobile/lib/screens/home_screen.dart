@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import 'tutors_list_screen.dart';
 import 'lesson_requests_screen.dart';
+import 'profile_edit_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -106,9 +107,11 @@ class HomeScreen extends ConsumerWidget {
               'Profil bilgilerinizi güncelleyin',
               Icons.edit,
               () {
-                // TODO: Navigate to profile edit
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Profil düzenleme yakında!')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileEditScreen(),
+                  ),
                 );
               },
             ),

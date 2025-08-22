@@ -95,7 +95,9 @@ class ApiClient {
   }
 
   Future<User> updateProfile(UpdateProfileRequest request) async {
-    final response = await _dio.patch('/me', data: request.toJson());
+    final Map<String, dynamic> data = request.toJson()
+      ..removeWhere((key, value) => value == null);
+    final response = await _dio.patch('/me', data: data);
     return User.fromJson(response.data);
   }
 
