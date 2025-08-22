@@ -194,11 +194,11 @@ python manage.py test --verbosity=2
 ```
 
 **Test Coverage:**
-- ✅ Authentication flow (register, login, token refresh)
-- ✅ Permission-based access control
-- ✅ Lesson request creation and approval workflow
-- ✅ Role-based API access restrictions
-- ✅ Data validation and error handling
+-  Authentication flow (register, login, token refresh)
+-  Permission-based access control
+-  Lesson request creation and approval workflow
+-  Role-based API access restrictions
+-  Data validation and error handling
 
 ### Test Structure
 ```
